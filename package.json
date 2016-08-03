@@ -1,0 +1,12 @@
+{
+  "name": "carbyne-leaflet",
+  "version": "0.1.0",
+  "repository": "https://github.com/ceymard/carbyne-leaflet",
+  "description": "some description",
+  "license": "MIT",
+  "main": "./src/index",
+  "typings": "./src/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  }
+}
