@@ -1,5 +1,6 @@
 
 import {o, c, Controller} from 'carbyne'
+import 'leaflet'
 
 export var TILE_LAYER = 'https://swtiles.sales-way.com/mapbox-studio-humanitarian-print/{z}/{x}/{y}' + (L.Browser.retina ? '@2x' : '') + '.png'
 
@@ -30,28 +31,28 @@ declare global {
  * a peut être pas grand chose de dynamique dans ce qu'on veut mettre
  * dans une icône)
  */
-export var CarbyneIcon = L.Icon.extend({
-	options: {
-    marker: false
-  },
+// export var CarbyneIcon = L.Icon.extend({
+// 	options: {
+//     marker: false
+//   },
 
-  createIcon(oldIcon: any) {
-    let fragment: DocumentFragment = null;
+//   createIcon(oldIcon: any) {
+//     let fragment: DocumentFragment = null;
 
-    if (!this._carbyne_icon) {
-      this._carbyne_icon = this.options.marker();
-      fragment = document.createDocumentFragment();
-      this._carbyne_icon.mount(fragment); // force creation of the DOM.
-    }
+//     if (!this._carbyne_icon) {
+//       this._carbyne_icon = this.options.marker();
+//       fragment = document.createDocumentFragment();
+//       this._carbyne_icon.mount(fragment); // force creation of the DOM.
+//     }
 
-    return this._carbyne_icon.element;
-  },
+//     return this._carbyne_icon.element;
+//   },
 
-  destroy() {
+//   destroy() {
 
-  }
+//   }
 
-})
+// })
 
 export type MapReadyFn = (map: L.Map) => any
 
@@ -70,14 +71,14 @@ export class MapCtrl extends Controller {
 
 		this.l = L.map(this.atom.element, {
 			zoomControl: false,
-			minZoom: 7
-		});
-
+			minZoom: 7,
+			attributionControl: false
+		})
 
 		// Cleanup total des layers carbyne.
 		this.l.on('unload', ev => {
 			this.l.eachLayer(l => {
-				this.l.removeLayer(l);
+				this.l.removeLayer(l)
 			})
 		})
 

@@ -1,5 +1,5 @@
 
-import {Atom} from 'carbyne'
+import {c, Atom, Appendable} from 'carbyne'
 
 /**
  * Extension de leaflet pour signaler qu'on a créé un nouveau type d'icône.
@@ -53,7 +53,6 @@ L.carbyneIcon = function (options: L.CarbyneIconOptions) {
 	return new L.CarbyneIcon(options)
 }
 
-
 // On doit forcer Marker en any car il est mal défini et ne dit pas les choses correctement.
 L.CarbyneMarker = (L.Marker as any).extend({
 	onRemove(map: L.Map) {
@@ -67,4 +66,39 @@ L.CarbyneMarker = (L.Marker as any).extend({
 
 L.carbyneMarker = function (latlng: L.LatLngExpression, opts?: L.MarkerOptions) {
 	return new L.CarbyneMarker(latlng, opts)
+}
+
+
+/**
+ *
+ */
+export function createCarbyneIcon(cnts: Appendable, opts?: any): L.CarbyneIcon {
+
+	let icon = L.carbyneIcon({
+		marker: () =>
+			c('.leaflet-marker-icon', {class: opts.class||''},
+				c('.map-marker-icon', {},
+					c('.map-marker-circle', {class: opts.class||''}, cnts)
+				),
+				c('.map-marker-pin')
+			)
+	})
+
+	  //   <div class={'map-marker-pin'}/>,
+    // <div class='map-marker-icon'>
+    //   <Column class={['map-marker-lozange',
+    //                   {multiple: ᐅlst.p('length').gt(1)},
+    //                   ᐅlst.tf<string>(lst => lst[0].target.data.type)
+    //   ]} align='center' justify='center'>
+    //       <div class='map-marker-lozange-inside'>
+    //         {ᐅlst.tf<Appendable>(lst =>
+    //           lst[0].target.data.type === 'RX' ? <Icon name='account'/> :
+    //           lst[0].target.data.type === 'PH' ? <Icon name='hospital'/> :
+    //           <Icon name='flag'/>)
+    //         }
+    //       </div>
+    //   </Column>
+    // </div>
+
+	return icon
 }

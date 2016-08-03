@@ -8,5 +8,8 @@
   "typings": "./src/index.d.ts",
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "leaflet": "^0.7.7"
   }
 }
