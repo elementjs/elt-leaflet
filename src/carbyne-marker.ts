@@ -80,25 +80,9 @@ export function createCarbyneIcon(cnts: Appendable, opts?: any): L.CarbyneIcon {
 				c('.map-marker-icon', {},
 					c('.map-marker-circle', {class: opts.class||''}, cnts)
 				),
-				c('.map-marker-pin')
+				c('.map-marker-pin', {class: opts.class||''})
 			)
 	})
-
-	  //   <div class={'map-marker-pin'}/>,
-    // <div class='map-marker-icon'>
-    //   <Column class={['map-marker-lozange',
-    //                   {multiple: ᐅlst.p('length').gt(1)},
-    //                   ᐅlst.tf<string>(lst => lst[0].target.data.type)
-    //   ]} align='center' justify='center'>
-    //       <div class='map-marker-lozange-inside'>
-    //         {ᐅlst.tf<Appendable>(lst =>
-    //           lst[0].target.data.type === 'RX' ? <Icon name='account'/> :
-    //           lst[0].target.data.type === 'PH' ? <Icon name='hospital'/> :
-    //           <Icon name='flag'/>)
-    //         }
-    //       </div>
-    //   </Column>
-    // </div>
 
 	return icon
 }
