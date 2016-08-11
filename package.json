@@ -5,9 +5,11 @@
   "description": "some description",
   "license": "MIT",
   "main": "./src/index",
-  "typings": "./src/index.d.ts",
+  "typings": "./index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build:dts": "dts-bundle --name carbyne-leaflet --main src/index.d.ts --out ../index.d.ts && sed -i '/\\(require\\|import\\).*\\.\\(styl\\|css\\)/d' ./index.d.ts",
+    "build:js": "tsc",
+    "build": "npm run build:js && npm run build:dts"
   },
   "dependencies": {
     "leaflet": "^0.7.7"
