@@ -11,13 +11,8 @@
         "reactNamespace": "c",
         "noLib": false
     },
-    "filesGlob": [
-        "./**/*.ts",
-        "**/node_modules/**/*.ts"
-    ],
     "files": [
-        "./src/index.ts",
-        "./typings/index.d.ts"
+        "./src/index.ts"
     ]
 
 }

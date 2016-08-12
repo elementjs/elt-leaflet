@@ -1,7 +1,7 @@
 node_modules
 elt
 *.js
-src/**/*.d.ts
+*.d.ts
 *.map
 ._*
 typings
