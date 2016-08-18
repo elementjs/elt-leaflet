@@ -1,5 +1,5 @@
 
-import {c, Atom, ArrayObservable, Observable, click, Appendable} from 'carbyne'
+import {c, Atom, Observable, click, Appendable} from 'carbyne'
 import {Column, scrollable} from 'carbyne-material'
 
 import {} from './carbyne-marker'
@@ -21,7 +21,7 @@ export interface ILocatable {
 
 export type MarkerAndObs<T> = {
 	marker: L.Marker,
-	obs: ArrayObservable<T>
+	obs: Observable<T[]>
 }
 
 /**
@@ -140,7 +140,7 @@ export class MarkerStore<T extends ILocatable> {
 					// On a récupéré ce qu'il y avait à récupérer, donc on l'enlève de la old_map
 					old_map.delete(lls)
 				} else {
-					let obs = new ArrayObservable<T>([item])
+					let obs = new Observable<T[]>([item])
 					let marker = this.getMarker(ll, obs)
 					newitem_map.set(item, marker)
 					new_map.set(lls, {
@@ -194,7 +194,7 @@ export class MarkerStore<T extends ILocatable> {
 	/**
 	 * Crée ou récupère un marqueur pour un Step donné.
 	 */
-	private getMarker(ll: L.LatLng, obs: ArrayObservable<T>): L.Marker {
+	private getMarker(ll: L.LatLng, obs: Observable<T[]>): L.Marker {
 
 		let icon = L.carbyneIcon({
 			marker: () => <div class='leaflet-marker-icon'>
