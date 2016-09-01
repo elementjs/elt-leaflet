@@ -51,6 +51,7 @@ export class MarkerStore<T extends ILocatable> {
 		// en ne changeant que les éléments sélectionnés.
 		this.popup = popup(this.ᐅselected_list, this.ᐅselected)
 		this.popup.mount(document.createDocumentFragment())
+		this.popup.setMounted()
 
 		this.llmap = new Map<string, MarkerAndObs<T>>()
 		this.itemmap = new Map<T, L.Marker>()

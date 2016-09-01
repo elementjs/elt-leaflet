@@ -40,6 +40,7 @@ L.CarbyneIcon = L.Icon.extend({
       this._carbyne_icon = this.options.marker();
       fragment = document.createDocumentFragment();
       this._carbyne_icon.mount(fragment); // force creation of the DOM.
+			this._carbyne_icon.setMounted()
     }
     return this._carbyne_icon.element;
   },
