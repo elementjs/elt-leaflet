@@ -88,12 +88,11 @@ export class MapCtrl extends Controller {
     }).addTo(this.l);
 
     // Enfin, un petit fix pour être sûr que la map calcule bien sa propre taille.
-    // requestAnimationFrame(() => {
-			// this.l.setView({lat: 45.54578, lng: 5.342374}, 7)
+		requestAnimationFrame(() => {
 			for (let fn of this._queue)
 				fn(this.l)
 			this._queue = []
-    // });
+		})
 
 	}
 
