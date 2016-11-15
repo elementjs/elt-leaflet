@@ -2,7 +2,7 @@
 import {d, Observable, click} from 'domic'
 import {Column, scrollable} from 'domic-material'
 
-import {} from './domic-marker'
+import {createIcon} from './domic-marker'
 import {
 	LatLng,
 	Marker,
@@ -216,9 +216,10 @@ export class MarkerStore<T extends ILocatable> {
 		// let ic = icon({
 
 		// })
+		let ic = createIcon(this.markerfn(obs))
 
-		let m = L.carbyneMarker(ll, {
-			icon: null
+		let m = L.marker(ll, {
+			icon: ic
 		})
 
 		this.layer.addLayer(m)

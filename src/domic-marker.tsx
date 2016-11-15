@@ -79,7 +79,11 @@ export interface DomicIconOptions extends IconOptions {
 }
 
 
-export const DomicIcon = L.Icon.extend({
+/**
+ * Create a custom icon. Unfortunately, L.Icon does not have
+ * the extend method in the typings we have.
+ */
+export const DomicIcon = (L.Icon as any).extend({
 	createIcon(old: Node): Node {
 		if (old) return old
 
@@ -89,7 +93,7 @@ export const DomicIcon = L.Icon.extend({
 })
 
 
-export function createMarker(ch: DocumentFragment): L.Icon {
+export function createIcon(ch: DocumentFragment): L.Icon {
 	return new DomicIcon({
 		render: () => <div class='leaflet-marker-icon'>
 				<div class='map-marker-icon'>
