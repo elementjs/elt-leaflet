@@ -5,3 +5,4 @@ elt
 *.map
 ._*
 typings
+build

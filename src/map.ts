@@ -1,29 +1,35 @@
 
-import {o, c, Controller} from 'carbyne'
-import 'leaflet'
+import {
+	o,
+	d,
+	Controller
+} from 'domic'
+
+import {
+	Marker,
+	Polyline,
+	Layer
+} from 'leaflet'
 
 export var TILE_LAYER = 'https://swtiles.sales-way.com/mapbox-studio-humanitarian-print/{z}/{x}/{y}' + (L.Browser.retina ? '@2x' : '') + '.png'
 
 // export const TILE_LAYER = `https://{s}-s.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png`
 // export const TILE_SUBDOMAINS = ['otile1', 'otile2', 'otile3', 'otile4']
 
-function _isMarker(o: any): o is L.Marker { return o instanceof L.Marker }
-function _isPolyline(o: any): o is L.Polyline { return o instanceof L.Polyline }
-
 
 /**
  * Additions to the leaflet typings for some undocumented methods.
  */
-declare global {
-	namespace L {
+// declare global {
+// 	namespace L {
 
-		/**
-		 * Give the layer id of any layer. Useful with
-		 * featureGroup (not in the original typings)
-		 */
-		function stamp(layer: ILayer): number
-	}
-}
+// 		/**
+// 		 * Give the layer id of any layer. Useful with
+// 		 * featureGroup (not in the original typings)
+// 		 */
+// 		function stamp(layer: Layer): number
+// 	}
+// }
 
 /**
  * Un type d'icone custom qui prend du carbyne pour faire son marker.
@@ -69,7 +75,7 @@ export class MapCtrl extends Controller {
 
 		if (this.l) return
 
-		this.l = L.map(this.atom.element, {
+		this.l = L.map(this.node as HTMLElement, {
 			zoomControl: false,
 			minZoom: 7,
 			attributionControl: false

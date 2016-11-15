@@ -1,8 +1,18 @@
 
-import {c, Atom, Observable, click, Appendable} from 'carbyne'
-import {Column, scrollable} from 'carbyne-material'
+import {d, Observable, click} from 'domic'
+import {Column, scrollable} from 'domic-material'
 
-import {} from './carbyne-marker'
+import {} from './domic-marker'
+import {
+	LatLng,
+	Marker,
+	featureGroup,
+	FeatureGroup,
+	MouseEvent as LeafletMouseEvent,
+	icon,
+	marker,
+	Map as LMap
+} from 'leaflet'
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -12,8 +22,8 @@ import {} from './carbyne-marker'
  * et un item. Doit faire un item.set() d'un élément de sa liste pour être
  * plus logique.
  */
-export type PopupFn<T> = (list: Observable<T[]>, item: Observable<T>) => Atom
-export type MarkerFn<T> = (o: Observable<T[]>) => Appendable
+export type PopupFn<T> = (list: Observable<T[]>, item: Observable<T>) => HTMLElement
+export type MarkerFn<T> = (o: Observable<T[]>) => HTMLElement
 
 export interface ILocatable {
 	latlng(items?: ILocatable[]): L.LatLng
@@ -31,9 +41,9 @@ export class MarkerStore<T extends ILocatable> {
 
 	public ᐅselected: Observable<T>
 
-	protected map: L.Map
-	protected layer: L.FeatureGroup<L.Marker>
-	protected popup: Atom
+	protected map: LMap
+	protected layer: FeatureGroup
+	protected popup: HTMLElement
 	protected markerfn: MarkerFn<T>
 
 	protected llmap: Map<string, MarkerAndObs<T>>
@@ -50,15 +60,13 @@ export class MarkerStore<T extends ILocatable> {
 		// On gruge ici en construisant un popup qui sera complètement réutilisé
 		// en ne changeant que les éléments sélectionnés.
 		this.popup = popup(this.ᐅselected_list, this.ᐅselected)
-		this.popup.mount(document.createDocumentFragment())
-		this.popup.setMounted()
 
 		this.llmap = new Map<string, MarkerAndObs<T>>()
 		this.itemmap = new Map<T, L.Marker>()
 
-		this.layer = L.featureGroup<L.Marker>()
+		this.layer = featureGroup()
 
-		this.layer.on('click', (e: L.LeafletMouseEvent) => {
+		this.layer.on('click', (e: LeafletMouseEvent) => {
 			let ll = e.latlng.toString()
 			let marker = this.llmap.get(ll).marker
 			this.selectMarker(marker)
@@ -165,7 +173,7 @@ export class MarkerStore<T extends ILocatable> {
 		// on le rebind après cette opération.
 		// Update: Il y a bien une issue ouverte sur github où le dev suggère d'attendre
 		// la 1.0 pour que ce soit résolu.
-		this.layer.bindPopup(this.popup.element as any, {
+		this.layer.bindPopup(this.popup, {
 			closeButton: false,
 			autoPan: true,
 			autoPanPadding: L.point(30, 30),
@@ -187,7 +195,7 @@ export class MarkerStore<T extends ILocatable> {
 	/**
 	 * Ne sélectionne pas un target, mais potentiellement une liste de ceux-ci
 	 */
-	handleClick(event: L.LeafletMouseEvent) {
+	handleClick(event: LeafletMouseEvent) {
 		let marker: L.Marker = event.target
 		this.selectMarker(marker)
 	}
@@ -197,16 +205,20 @@ export class MarkerStore<T extends ILocatable> {
 	 */
 	private getMarker(ll: L.LatLng, obs: Observable<T[]>): L.Marker {
 
-		let icon = L.carbyneIcon({
-			marker: () => <div class='leaflet-marker-icon'>
-					{this.markerfn(obs)}
-			</div>,
-			iconAnchor: [0, 0],
-			popupAnchor: [0, 0] // FIXME, this can't be right...
-		})
+		// let icon = L.carbyneIcon({
+		// 	marker: () => <div class='leaflet-marker-icon'>
+		// 			{this.markerfn(obs)}
+		// 	</div>,
+		// 	iconAnchor: [0, 0],
+		// 	popupAnchor: [0, 0] // FIXME, this can't be right...
+		// })
+
+		// let ic = icon({
+
+		// })
 
 		let m = L.carbyneMarker(ll, {
-			icon: icon
+			icon: null
 		})
 
 		this.layer.addLayer(m)
@@ -218,7 +230,6 @@ export class MarkerStore<T extends ILocatable> {
 	 */
 	destroy() {
 		// on nettoie tous les observables
-		this.popup.broadcast('destroy')
 		this.map.removeLayer(this.layer)
 	}
 

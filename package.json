@@ -1,25 +1,25 @@
 {
-  "name": "carbyne-leaflet",
+  "name": "domic-leaflet",
   "version": "0.1.0",
-  "repository": "https://github.com/ceymard/carbyne-leaflet",
+  "repository": "https://github.com/ceymard/domic-leaflet",
   "description": "some description",
   "license": "MIT",
-  "main": "./src/index",
   "typings": "./index.d.ts",
   "scripts": {
-    "build:dts": "dts-bundle --name carbyne-leaflet --main src/index.d.ts --out ../index.d.ts && sed -i '/\\(require\\|import\\).*\\.\\(styl\\|css\\)/d' ./index.d.ts",
+    "build:dts": "dts-bundle --name domic-leaflet --main src/index.d.ts --out ../index.d.ts",
     "build:js": "tsc",
     "build": "npm run build:js && npm run build:dts",
     "watch": "parallel -u ::: 'ls src/*.d.ts | entr -d npm run build:dts' 'tscc -w'"
   },
   "dependencies": {
-    "leaflet": "^0.7.7"
+    "leaflet": "^1.0.1"
   },
   "devDependencies": {
-    "@types/es6-collections": "0.0.28",
-    "@types/es6-promise": "0.0.29",
+    "@types/es6-shim": "^0.31.32",
     "@types/geojson": "0.0.28",
-    "@types/leaflet": "^0.7.28",
-    "dts-bundle": "^0.5.0"
+    "@types/leaflet": "^1.0.37",
+    "dts-bundle": "^0.5.0",
+    "source-map-loader": "^0.1.5",
+    "webpack": "^1.13.3"
   }
 }
