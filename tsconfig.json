@@ -10,7 +10,7 @@
         "jsx": "react",
         "outDir": "./build",
         "reactNamespace": "d",
-        "noLib": false
+        "lib": ["es6", "dom"]
     },
     "files": [
         "./src/index.ts"
