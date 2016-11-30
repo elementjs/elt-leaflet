@@ -6,10 +6,10 @@
   "license": "MIT",
   "typings": "./index.d.ts",
   "scripts": {
-    "build:dts": "dts-bundle --name domic-leaflet --main src/index.d.ts --out ../index.d.ts",
+    "build:dts": "dts-bundle --name domic-leaflet --main build/index.d.ts --out ../index.d.ts",
     "build:js": "tsc",
-    "build": "npm run build:js && npm run build:dts",
-    "watch": "parallel -u ::: 'ls src/*.d.ts | entr -d npm run build:dts' 'tscc -w'"
+    "build": "npm run build:js && npm run build:dts && webpack",
+    "watch": "parallel -u ::: 'ls build/*.d.ts | entr -d npm run build:dts' 'tscc -w' 'webpack -w'"
   },
   "dependencies": {
     "leaflet": "^1.0.1"

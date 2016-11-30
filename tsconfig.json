@@ -7,6 +7,7 @@
         "sourceMap": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
+        "experimentalDecorators": true,
         "jsx": "react",
         "outDir": "./build",
         "reactNamespace": "d",
