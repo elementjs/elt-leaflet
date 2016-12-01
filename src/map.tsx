@@ -1,16 +1,18 @@
 
 import {
 	ArrayOrSingle,
+	BasicAttributes,
 	Component,
+	Controller,
+	d,
+	HTMLComponent,
 	o,
 	O,
 	Observable,
 	onmount,
 	onunmount,
-	BasicAttributes,
-	d,
-	Controller,
-	HTMLComponent,
+	onrender,
+	VirtualHolder,
 } from 'domic'
 
 import * as L from 'leaflet'
@@ -128,129 +130,19 @@ export class DOMIcon extends DivIcon {
 }
 
 
-export interface MarkerStoreAttributes<T> extends BasicAttributes {
-
-	obs: Observable<T[]>
-	latlngfn: (t: T) => L.LatLng
-	markerfn?: (lst: Observable<T>[]) => Node
-	popupfn?: (lst: Observable<T>[]) => Node
-	onselect?: (lst: Observable<T>[]) => void
-
-	// Linked to zoom level
-	threshold?: number
-
-}
-
-
-/**
- *
- */
-export class MarkerStore<T> extends Component {
-
-	attrs: MarkerStoreAttributes<T>
-
-	map: Map
-	layer: L.FeatureGroup
-
-	@onmount
-	getMap(node: Node) {
-		this.map = Map.get(node)
-	}
-
-	@onunmount
-	remove() {
-
-		// destroy this layer.
-		if (this.layer)
-			this.map.l.removeLayer(this.layer)
-
-		this.map = null
-	}
-
-	updateMarkers(lst: T[]) {
-		const fn = this.attrs.latlngfn
-
-		if (this.layer) {
-			this.map.l.removeLayer(this.layer)
-			this.layer = null
-		}
-
-		let markers = lst.map(item => {
-			// let di = divIcon({})
-			// di.createIcon = function (old: HTMLElement) {
-			// 	console.log('WHAT ?')
-			// 	console.log(old, icon)
-			// 	return old ? old : icon
-			// }
-			if (!this.attrs.markerfn)
-				return L.circleMarker(fn(item))
-
-			let ma = L.marker(fn(item), {
-				icon: new DOMIcon({node: this.attrs.markerfn([o(item)]) as HTMLElement}),
-			})
-			return ma
-			// return circleMarker(fn(item))
-		})
-		this.layer = L.featureGroup(markers)
-		this.layer.addTo(this.map.l)
-
-		this.map.l.fitBounds(this.layer.getBounds(), {
-			animate: true,
-			padding: [50, 50]
-		})
-	}
-
-	render() {
-
-		this.observe(this.attrs.obs, list => {
-			// create markers for this list.
-			this.updateMarkers(list)
-		})
-
-		return document.createComment('marker store')
-	}
-
-}
-
-
-export class PolylineStore extends Component {
-
-	attrs: {line: O<L.Polyline>, options?: O<L.PathOptions>}
-
-	render() {
-
-		let previous_line: L.Polyline = null
-
-		this.observe(this.attrs.line, line => {
-			const map = Map.get(this.node)
-			if (previous_line)
-				previous_line.remove()
-
-			previous_line = line
-			if (line) line.addTo(map.l)
-		})
-
-		return document.createComment('polyline store')
-	}
-
-}
 
 
 
-export class Layer extends Component {
+export class Layer extends VirtualHolder {
+
+	name = 'leaflet layer'
 
 	attrs: {
-		contents: O<ArrayOrSingle<L.Layer>>,
+		contents?: O<ArrayOrSingle<L.Layer>>,
 	}
 
 	layer = L.featureGroup()
 	current: ArrayOrSingle<L.Layer> = null
-
-	@onunmount
-	remove() {
-		_foreach(this.current, ob => ob.remove())
-		this.layer.remove()
-	}
 
 	@onmount
 	addToMap(node: Node) {
@@ -266,6 +158,20 @@ export class Layer extends Component {
 		map.l.addLayer(this.layer)
 	}
 
+	@onunmount
+	remove() {
+		_foreach(this.current, ob => ob.remove())
+		this.layer.remove()
+	}
+
+	@onrender
+	linkContent() {
+		// If there is contents, just add them.
+		if (this.attrs.contents) {
+			this.observe(this.attrs.contents, layer => this.update(layer))
+		}
+	}
+
 	update(obj: ArrayOrSingle<L.Layer>) {
 			const map = Map.get(this.node)
 			const layer = Layer.get(this.node.parentNode)
@@ -275,25 +181,16 @@ export class Layer extends Component {
 			_foreach(obj, ob => layer ? layer.layer.addLayer(ob) : ob.addTo(map.l))
 	}
 
-	render() {
-
-		// If there is contents, just add them.
-		if (this.attrs.contents)
-			this.observe(this.attrs.contents, layer => this.update(layer))
-
-		return document.createComment('layer')
-	}
+	// render() {
+	// 	return document.createComment('whatever')
+	// }
 
 }
 
 
-export class MarkerFactory extends Layer {
-
-}
-
-
-export interface MarkerAttributes extends L.MarkerOptions {
-	coords: L.LatLngExpression
+export interface SVGMarkerAttributes extends L.MarkerOptions {
+	coords: O<L.LatLngExpression>
+	className?: O<string>
 	// popup ?
 	// onclick ?
 	// ???
@@ -305,13 +202,11 @@ export interface MarkerAttributes extends L.MarkerOptions {
  */
 export class SVGMarker extends Component {
 
-	attrs: MarkerAttributes
+	attrs: SVGMarkerAttributes
 	marker: L.Marker = null
 
 	@onmount
 	addToMap(node: Node) {
-		if (!this.marker)
-			this.marker = this.renderMarker()
 		_addLayer(node, this.marker)
 	}
 
@@ -323,19 +218,21 @@ export class SVGMarker extends Component {
 	/**
 	 * extend this.
 	 */
-	renderMarker(): L.Marker {
-		// let opts = Object.assign({} as L.MarkerOptions, this.attrs || {})
-
-		return L.marker(this.attrs.coords as L.LatLng, {
-			icon: new DOMIcon({node: this.renderSVG() as HTMLElement})
+	renderMarker(children: DocumentFragment): L.Marker {
+		return L.marker(o.get(this.attrs.coords), {
+			icon: new DOMIcon({node: this.renderSVG(children) as HTMLElement})
 		})
 	}
 
-	renderSVG(): Node {
+	renderSVG(ch: DocumentFragment): Node {
 		return null
 	}
 
-	render() {
+	render(children: DocumentFragment) {
+		this.marker = this.renderMarker(children)
+
+		this.observe(this.attrs.coords, coords => this.marker.setLatLng(coords))
+
 		return document.createComment('marker')
 	}
 
