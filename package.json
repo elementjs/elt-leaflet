@@ -1,6 +1,6 @@
 {
   "name": "domic-leaflet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": "https://github.com/ceymard/domic-leaflet",
   "description": "some description",
   "license": "MIT",
@@ -9,7 +9,8 @@
     "build:dts": "dts-bundle --name domic-leaflet --main build/index.d.ts --out ../index.d.ts",
     "build:js": "tsc",
     "build": "npm run build:js && npm run build:dts && webpack",
-    "watch": "parallel -u ::: 'ls build/*.d.ts | entr -d npm run build:dts' 'tscc -w' 'webpack -w'"
+    "watch": "parallel -u ::: 'ls build/*.d.ts | entr -d npm run build:dts' 'tscc -w' 'webpack -w'",
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "leaflet": "^1.0.1"
