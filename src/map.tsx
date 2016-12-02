@@ -6,10 +6,12 @@ import {
 	Controller,
 	d,
 	HTMLComponent,
+	getChildren,
 	o,
 	O,
 	Observable,
 	onmount,
+	onfirstmount,
 	onunmount,
 	onrender,
 	VirtualHolder,
@@ -109,13 +111,11 @@ export class Map extends HTMLComponent {
 }
 
 
-export const DivIcon: new (opts: L.DivIconOptions) => L.DivIcon = (L as any).DivIcon
-
 export interface DOMIconOptions extends L.DivIconOptions {
 	node: HTMLElement
 }
 
-export class DOMIcon extends DivIcon {
+export class DOMIcon extends L.DivIcon {
 
 	options: DOMIconOptions
 
@@ -133,7 +133,7 @@ export class DOMIcon extends DivIcon {
 
 
 
-export class Layer extends VirtualHolder {
+export class Layer extends Component {
 
 	name = 'leaflet layer'
 
@@ -166,6 +166,7 @@ export class Layer extends VirtualHolder {
 
 	@onrender
 	linkContent() {
+
 		// If there is contents, just add them.
 		if (this.attrs.contents) {
 			this.observe(this.attrs.contents, layer => this.update(layer))
@@ -181,9 +182,31 @@ export class Layer extends VirtualHolder {
 			_foreach(obj, ob => layer ? layer.layer.addLayer(ob) : ob.addTo(map.l))
 	}
 
-	// render() {
-	// 	return document.createComment('whatever')
-	// }
+	render(children: DocumentFragment) {
+		// we still need a div because we want the children to find it.
+		return <div style='display: none;'>{children}</div>
+	}
+
+}
+
+
+export class Popup extends Component {
+
+	contents: HTMLElement
+
+	@onfirstmount
+	attachToLayer() {
+		const layer = Layer.get(this.node)
+		layer.layer.bindPopup(this.contents)
+	}
+
+	render(children: DocumentFragment) {
+		this.contents = <div class='dl--popup'>
+			{children}
+		</div> as HTMLElement
+
+		return document.createComment('popup')
+	}
 
 }
 
@@ -191,6 +214,7 @@ export class Layer extends VirtualHolder {
 export interface SVGMarkerAttributes extends L.MarkerOptions {
 	coords: O<L.LatLngExpression>
 	className?: O<string>
+	onclick?: (ev: MouseEvent) => any
 	// popup ?
 	// onclick ?
 	// ???
@@ -219,9 +243,17 @@ export class SVGMarker extends Component {
 	 * extend this.
 	 */
 	renderMarker(children: DocumentFragment): L.Marker {
-		return L.marker(o.get(this.attrs.coords), {
-			icon: new DOMIcon({node: this.renderSVG(children) as HTMLElement})
-		})
+
+		const opts: L.MarkerOptions = {}
+		opts.icon = new DOMIcon({node: this.renderSVG(children) as HTMLElement})
+
+		let mark = L.marker(o.get(this.attrs.coords), opts)
+
+		if (this.attrs.onclick) {
+			mark.addEventListener('click', this.attrs.onclick)
+		}
+
+		return mark
 	}
 
 	renderSVG(ch: DocumentFragment): Node {
@@ -242,7 +274,7 @@ export class SVGMarker extends Component {
 
 export class Centerer extends Component {
 
-	attrs: {center: Observable<L.LatLng>}
+	attrs: {center: Observable<L.LatLngExpression | L.LatLngBoundsExpression>}
 	map: Map
 
 	@onmount
@@ -257,7 +289,16 @@ export class Centerer extends Component {
 
 	render() {
 		this.observe(this.attrs.center, center => {
-			if (this.map && center) this.map.l.setView(center, this.map.l.getZoom())
+			if (this.map && center) {
+				if (center instanceof L.LatLng) {
+					this.map.l.setView(center as L.LatLngExpression, this.map.l.getZoom())
+				} else {
+					this.map.l.fitBounds(center as L.LatLngBoundsExpression, {
+						animate: true, padding: [150, 150]
+					})
+				}
+			}
+
 		})
 
 		return document.createComment('centerer')
