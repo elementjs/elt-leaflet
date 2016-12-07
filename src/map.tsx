@@ -190,14 +190,39 @@ export class Layer extends Component {
 }
 
 
+export interface PopupAttributes extends L.PopupOptions {
+	coord: L.LatLngExpression
+}
+
+
 export class Popup extends Component {
 
+	attrs: PopupAttributes
 	contents: HTMLElement
 
 	@onfirstmount
-	attachToLayer() {
-		const layer = Layer.get(this.node)
-		layer.layer.bindPopup(this.contents)
+	attachToLayer(node: Node) {
+		const map = Map.get(node).l
+
+		const popup = L.popup(this.attrs)
+		.setContent(this.contents)
+		.setLatLng(this.attrs.coord)
+
+		popup.addEventListener('add', () => {
+			// on resize le popup tout de suite
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					popup.update()
+				})
+			})
+		})
+
+		map.openPopup(popup)
+	}
+
+	@onunmount
+	cleanup() {
+
 	}
 
 	render(children: DocumentFragment) {
