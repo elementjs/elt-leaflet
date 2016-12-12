@@ -191,7 +191,8 @@ export class Layer extends Component {
 
 
 export interface PopupAttributes extends L.PopupOptions {
-	coord: L.LatLngExpression
+	coords: O<L.LatLngExpression>
+	onclose?: (ev: L.PopupEvent) => any
 }
 
 
@@ -199,25 +200,36 @@ export class Popup extends Component {
 
 	attrs: PopupAttributes
 	contents: HTMLElement
+	popup: L.Popup
 
 	@onfirstmount
 	attachToLayer(node: Node) {
 		const map = Map.get(node).l
 
-		const popup = L.popup(this.attrs)
+		this.popup = L.popup(this.attrs)
 		.setContent(this.contents)
-		.setLatLng(this.attrs.coord)
+		.setLatLng(o.get(this.attrs.coords))
 
-		popup.addEventListener('add', () => {
+		this.popup.addEventListener('add', () => {
 			// on resize le popup tout de suite
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
-					popup.update()
+					this.popup.update()
 				})
 			})
 		})
 
-		map.openPopup(popup)
+		if (this.attrs.onclose) {
+			var close = (ev: L.PopupEvent) => {
+				this.attrs.onclose(ev)
+				map.removeEventListener('popupclose', close)
+			}
+
+			map.addEventListener('popupclose', close)
+
+		}
+
+		map.openPopup(this.popup)
 	}
 
 	@onunmount
@@ -229,6 +241,10 @@ export class Popup extends Component {
 		this.contents = <div class='dl--popup'>
 			{children}
 		</div> as HTMLElement
+
+		this.observe(this.attrs.coords, coords => {
+			this.popup && this.popup.setLatLng(coords)
+		})
 
 		return document.createComment('popup')
 	}
