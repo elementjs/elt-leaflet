@@ -14,7 +14,8 @@
         "lib": ["es6", "dom"]
     },
     "files": [
-        "./src/index.ts"
+        "./src/index.ts",
+	"./dts/index.d.ts"
     ]
 
 }

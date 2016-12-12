@@ -6,7 +6,7 @@
   "license": "MIT",
   "typings": "./index.d.ts",
   "scripts": {
-    "build:dts": "dts-bundle --name domic-leaflet --main build/index.d.ts --out ../index.d.ts",
+    "build:dts": "dts-bundle --name domic-leaflet --main build/index.d.ts --out ../domic-leaflet.d.ts",
     "build:js": "tsc",
     "build": "npm run build:js && npm run build:dts && webpack",
     "watch": "parallel -u ::: 'ls build/*.d.ts | entr -d npm run build:dts' 'tscc -w' 'webpack -w'",
@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/geojson": "0.0.28",
     "@types/leaflet": "^1.0.38",
-    "dts-bundle": "^0.5.0",
+    "dts-bundle": "^0.6.1",
     "source-map-loader": "^0.1.5",
     "webpack": "^1.13.3"
   }
