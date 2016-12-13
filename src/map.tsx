@@ -221,8 +221,13 @@ export class Popup extends Component {
 
 		if (this.attrs.onclose) {
 			var close = (ev: L.PopupEvent) => {
-				this.attrs.onclose(ev)
-				map.removeEventListener('popupclose', close)
+				if (ev.popup === this.popup) {
+					map.removeEventListener('popupclose', close)
+					// Only run this if the popup was closed by a map interaction,
+					// not if we were unmounted.
+					if (!this.mounted) return
+					this.attrs.onclose(ev)
+				}
 			}
 
 			map.addEventListener('popupclose', close)
@@ -234,7 +239,8 @@ export class Popup extends Component {
 
 	@onunmount
 	cleanup() {
-
+		// popup is removed if our node is gone from the DOM.
+		this.popup.remove()
 	}
 
 	render(children: DocumentFragment) {
