@@ -352,3 +352,74 @@ export class Centerer extends Component {
 	}
 
 }
+
+
+
+export type LeafletCallback<T extends L.Event> = (ev: T) => any
+
+export interface MapWatcherAttributes {
+
+	autopanstart?: LeafletCallback<L.Event>
+	baselayerchange?: LeafletCallback<L.LayersControlEvent>
+	click?: LeafletCallback<L.MouseEvent>
+	// contextmenu?:	LeafletCallback<L.MouseEvent> FIXME incompatibility with domic.
+	dblclick?: LeafletCallback<L.MouseEvent>
+	keypress?: LeafletCallback<L.Event> // FIXME there should be KeyboardEvent
+	layeradd?: LeafletCallback<L.LayerEvent>
+	layerremove?: LeafletCallback<L.LayerEvent>
+	load?: LeafletCallback<L.Event>
+	locationerror?: LeafletCallback<L.ErrorEvent>
+	locationfound?: LeafletCallback<L.LocationEvent>
+	mousedown?: LeafletCallback<L.MouseEvent>
+	mousemove?: LeafletCallback<L.MouseEvent>
+	mouseout?: LeafletCallback<L.MouseEvent>
+	mouseover?: LeafletCallback<L.MouseEvent>
+	mouseup?: LeafletCallback<L.MouseEvent>
+	move?: LeafletCallback<L.Event>
+	moveend?: LeafletCallback<L.Event>
+	movestart?: LeafletCallback<L.Event>
+	overlayadd?: LeafletCallback<L.LayersControlEvent>
+	overlayremove?: LeafletCallback<L.LayersControlEvent>
+	popupclose?: LeafletCallback<L.PopupEvent>
+	popupopen?: LeafletCallback<L.PopupEvent>
+	preclick?: LeafletCallback<L.MouseEvent>
+	resize?: LeafletCallback<L.ResizeEvent>
+	tooltipclose?: LeafletCallback<L.TooltipEvent>
+	tooltipopen?: LeafletCallback<L.TooltipEvent>
+	unload?: LeafletCallback<L.Event>
+	viewreset?: LeafletCallback<L.Event>
+	zoom?: LeafletCallback<L.Event>
+	zoomend?: LeafletCallback<L.Event>
+	zoomlevelschange?:	LeafletCallback<L.Event>
+	zoomstart?: LeafletCallback<L.Event>
+
+}
+
+
+export class MapWatcher extends Component {
+
+	attrs: MapWatcherAttributes
+	l: L.Map
+
+	@onmount
+	associateCallbacksToEvents() {
+		const map = this.l = Map.get(this.node).l
+
+		for (var prop in this.attrs)
+			map.on(prop, (this.attrs as any)[prop])
+	}
+
+	@onunmount
+	unassociate() {
+		const map = this.l
+		this.l = null
+
+		for (var prop in this.attrs)
+			map.off(prop, (this.attrs as any)[prop])
+	}
+
+	render() {
+		return document.createComment('map watcher')
+	}
+
+}
