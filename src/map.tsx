@@ -17,7 +17,9 @@ import {
 	VirtualHolder,
 } from 'domic'
 
-import * as L from 'leaflet'
+import * as Leaflet from 'leaflet'
+
+export const L = Leaflet;
 
 (window as any).L_NO_TOUCH = true
 
@@ -57,9 +59,6 @@ export class Map extends HTMLComponent {
 	attrs: MapAttributes
 	l: L.Map
 
-	public o_zoom: Observable<number> = o(-1)
-	public o_center: Observable<L.LatLng> = o(null)
-
 	@onmount
 	drawMap() {
 		this.l = L.map(this.node, {
@@ -75,9 +74,6 @@ export class Map extends HTMLComponent {
     L.tileLayer(this.attrs.tileLayer, {
 			// subdomains: TILE_SUBDOMAINS
     }).addTo(this.l);
-
-		this.l.on('zoomend', ev => this.o_zoom.set(this.l.getZoom()))
-		this.l.on('moveend', ev => this.o_center.set(this.l.getCenter()))
 
 		requestAnimationFrame(() => this.l.invalidateSize({}))
 	}
@@ -115,21 +111,11 @@ export interface DOMIconOptions extends L.DivIconOptions {
 	node: HTMLElement
 }
 
-export class DOMIcon extends L.DivIcon {
-
-	options: DOMIconOptions
-
-	constructor(opts: DOMIconOptions) {
-		super(opts)
+export const DOMIcon = L.Icon.extend({
+	createIcon(this: L.DivIcon, old: HTMLElement) {
+		return this.options.node
 	}
-
-	createIcon(old: HTMLElement) {
-		return old ? old : this.options.node
-	}
-
-}
-
-
+})
 
 
 
@@ -292,7 +278,9 @@ export class SVGMarker extends Component {
 	renderMarker(children: DocumentFragment): L.Marker {
 
 		const opts: L.MarkerOptions = {}
-		opts.icon = new DOMIcon({node: this.renderSVG(children) as HTMLElement})
+		const icon_opts: DOMIconOptions = {node: this.renderSVG(children) as HTMLElement}
+
+		opts.icon = new DOMIcon(icon_opts)
 
 		let mark = L.marker(o.get(this.attrs.coords), opts)
 
@@ -399,11 +387,11 @@ export interface MapWatcherAttributes {
 export class MapWatcher extends Component {
 
 	attrs: MapWatcherAttributes
-	l: L.Map
+	leaflet_map: L.Map
 
 	@onmount
 	associateCallbacksToEvents() {
-		const map = this.l = Map.get(this.node).l
+		const map = this.leaflet_map = Map.get(this.node).l
 
 		for (var prop in this.attrs)
 			map.on(prop, (this.attrs as any)[prop])
@@ -411,8 +399,8 @@ export class MapWatcher extends Component {
 
 	@onunmount
 	unassociate() {
-		const map = this.l
-		this.l = null
+		const map = this.leaflet_map
+		this.leaflet_map = null
 
 		for (var prop in this.attrs)
 			map.off(prop, (this.attrs as any)[prop])
