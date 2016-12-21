@@ -113,7 +113,7 @@ export interface DOMIconOptions extends L.DivIconOptions {
 
 export const DOMIcon = L.Icon.extend({
 	createIcon(this: L.DivIcon, old: HTMLElement) {
-		return this.options.node
+		return (this.options as any).node
 	}
 })
 
