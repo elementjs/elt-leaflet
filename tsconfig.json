@@ -5,6 +5,8 @@
         "moduleResolution": "node",
         "declaration": true,
         "sourceMap": true,
+	"strictNullChecks": true,
+	"noImplicitThis": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "experimentalDecorators": true,

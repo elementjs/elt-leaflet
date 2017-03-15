@@ -33,7 +33,7 @@ export interface MapAttributes extends BasicAttributes {
 /**
  * special foreach function
  */
-function _foreach<T>(ob: ArrayOrSingle<T>, callback: (t: T) => any) {
+function _foreach<T>(ob: ArrayOrSingle<T> | null, callback: (t: T) => any) {
 	if (ob == null) return
 	if (Array.isArray(ob))
 		ob.forEach(callback)
@@ -49,18 +49,25 @@ function _addLayer(node: Node, layer: L.Layer) {
 	}
 
 	const map = Map.get(node)
-	map.l.addLayer(layer)
+	if (!map)
+		throw new Error('did not find the map for this node')
+	map.leafletMap.addLayer(layer)
 }
 
 
 export class Map extends HTMLComponent {
 
 	attrs: MapAttributes
-	l: L.Map
+	private l: L.Map | null
+
+	get leafletMap(): L.Map {
+		if (!this.l) throw new Error('there is no map active on this node')
+		return this.l
+	}
 
 	@onmount
 	drawMap() {
-		this.l = L.map(this.node, {
+		var map = this.l = L.map(this.node, {
 			zoomControl: false,
 			minZoom: 7,
 			zoom: 13,
@@ -74,30 +81,35 @@ export class Map extends HTMLComponent {
 			// subdomains: TILE_SUBDOMAINS
     }).addTo(this.l);
 
-		requestAnimationFrame(() => this.l.invalidateSize({}))
+		requestAnimationFrame(() => map.invalidateSize({}))
 	}
 
 	@onunmount
 	cleanup() {
-		this.l.eachLayer(l => {
-			this.l.removeLayer(l)
+		var map = this.leafletMap
+		map.eachLayer(l => {
+			map.removeLayer(l)
 		})
-		this.l.remove()
+		map.remove()
 		this.l = null
 	}
 
 	panTo(ll: L.LatLng) {
-		this.l.panTo(ll)
+		this.leafletMap.panTo(ll)
+	}
+
+	addLayer(layer: L.Layer) {
+		this.leafletMap.addLayer(layer)
 	}
 
 	render(children: DocumentFragment) {
 
 		this.observe(this.attrs.center, center => {
-			if (center) this.l.panTo(center, {animate: true})
+			if (center) this.leafletMap.panTo(center, {animate: true})
 		})
 
 		this.observe(this.attrs.zoom, zoom => {
-			if (zoom != null) this.l.setZoom(zoom, {animate: true})
+			if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
 		})
 
 		return <div class='domic-leaflet-map'>{children}</div>
@@ -127,11 +139,11 @@ export class Layer extends Component {
 	}
 
 	layer = L.featureGroup()
-	current: ArrayOrSingle<L.Layer> = null
+	current: ArrayOrSingle<L.Layer> | null = null
 
 	@onmount
-	addToMap(node: Node) {
-		const layer = Layer.get(node.parentNode)
+	addToMap(node: Node, parent: Node) {
+		const layer = Layer.get(parent)
 		if (layer) {
 			layer.layer.addLayer(this.layer)
 			return
@@ -140,7 +152,7 @@ export class Layer extends Component {
 		// If there was no Layer above us, just add ourselves
 		// to the map.
 		const map = Map.get(node)
-		map.l.addLayer(this.layer)
+		map.leafletMap.addLayer(this.layer)
 	}
 
 	@onunmount
@@ -160,11 +172,11 @@ export class Layer extends Component {
 
 	update(obj: ArrayOrSingle<L.Layer>) {
 			const map = Map.get(this.node)
-			const layer = Layer.get(this.node.parentNode)
+			const layer = Layer.get(this.node.parentNode!)
 
 			_foreach(this.current, ob => ob.remove())
 			this.current = obj
-			_foreach(obj, ob => layer ? layer.layer.addLayer(ob) : ob.addTo(map.l))
+			_foreach(obj, ob => layer ? layer.layer.addLayer(ob) : ob.addTo(map.leafletMap))
 	}
 
 	render(children: DocumentFragment) {
@@ -189,7 +201,7 @@ export class Popup extends Component {
 
 	@onfirstmount
 	attachToLayer(node: Node) {
-		const map = Map.get(node).l
+		const map = Map.get(node).leafletMap
 
 		this.popup = L.popup(this.attrs)
 		.setContent(this.contents)
@@ -211,7 +223,7 @@ export class Popup extends Component {
 					// Only run this if the popup was closed by a map interaction,
 					// not if we were unmounted.
 					if (!this.mounted) return
-					this.attrs.onclose(ev)
+					this.attrs.onclose!(ev)
 				}
 			}
 
@@ -256,10 +268,10 @@ export interface SVGMarkerAttributes extends L.MarkerOptions {
 /**
  *
  */
-export class SVGMarker extends Component {
+export abstract class SVGMarker extends Component {
 
 	attrs: SVGMarkerAttributes
-	marker: L.Marker = null
+	marker: L.Marker
 
 	@onmount
 	addToMap(node: Node) {
@@ -290,9 +302,7 @@ export class SVGMarker extends Component {
 		return mark
 	}
 
-	renderSVG(ch: DocumentFragment): Node {
-		return null
-	}
+	abstract renderSVG(ch: DocumentFragment): Node
 
 	render(children: DocumentFragment) {
 		this.marker = this.renderMarker(children)
@@ -309,25 +319,15 @@ export class SVGMarker extends Component {
 export class Centerer extends Component {
 
 	attrs: {center: Observable<L.LatLngExpression | L.LatLngBoundsExpression>}
-	map: Map
-
-	@onmount
-	setupCentering() {
-		this.map = Map.get(this.node)
-	}
-
-	@onunmount
-	bye() {
-		this.map = null
-	}
 
 	render() {
 		this.observe(this.attrs.center, center => {
-			if (this.map && center) {
+			var map = Map.get(this.node)
+			if (center) {
 				if (center instanceof L.LatLng) {
-					this.map.l.setView(center as L.LatLngExpression, this.map.l.getZoom())
+					map.leafletMap.setView(center as L.LatLngExpression, map.leafletMap.getZoom())
 				} else {
-					this.map.l.fitBounds(center as L.LatLngBoundsExpression, {
+					map.leafletMap.fitBounds(center as L.LatLngBoundsExpression, {
 						animate: true, padding: [150, 150]
 					})
 				}
@@ -386,11 +386,11 @@ export interface MapWatcherAttributes {
 export class MapWatcher extends Component {
 
 	attrs: MapWatcherAttributes
-	leaflet_map: L.Map
+	leaflet_map: L.Map | null
 
 	@onmount
 	associateCallbacksToEvents() {
-		const map = this.leaflet_map = Map.get(this.node).l
+		const map = this.leaflet_map = Map.get(this.node).leafletMap
 
 		for (var prop in this.attrs)
 			map.on(prop, (this.attrs as any)[prop])
@@ -398,11 +398,12 @@ export class MapWatcher extends Component {
 
 	@onunmount
 	unassociate() {
-		const map = this.leaflet_map
-		this.leaflet_map = null
+		const map = this.leaflet_map!
 
 		for (var prop in this.attrs)
 			map.off(prop, (this.attrs as any)[prop])
+
+		this.leaflet_map = null
 	}
 
 	render() {
