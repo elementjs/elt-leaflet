@@ -9,7 +9,7 @@
         "noImplicitReturns": true,
         "experimentalDecorators": true,
         "jsx": "react",
-        "jsxFactory": "d",
+        "jsxFactory": "D",
         "outDir": "./build",
         "lib": ["es6", "dom"]
     },

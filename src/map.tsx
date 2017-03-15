@@ -4,11 +4,10 @@ import {
 	BasicAttributes,
 	Component,
 	Controller,
-	d,
 	HTMLComponent,
 	getChildren,
 	o,
-	O,
+	MaybeObservable,
 	Observable,
 	onmount,
 	onfirstmount,
@@ -25,8 +24,8 @@ export const L = Leaflet;
 
 
 export interface MapAttributes extends BasicAttributes {
-	center?: O<L.LatLng>
-	zoom?: O<number>
+	center?: MaybeObservable<L.LatLng>
+	zoom?: MaybeObservable<number>
 	tileLayer: string
 }
 
@@ -124,7 +123,7 @@ export class Layer extends Component {
 	name = 'leaflet layer'
 
 	attrs: {
-		contents?: O<ArrayOrSingle<L.Layer>>,
+		contents?: MaybeObservable<ArrayOrSingle<L.Layer>>,
 	}
 
 	layer = L.featureGroup()
@@ -177,7 +176,7 @@ export class Layer extends Component {
 
 
 export interface PopupAttributes extends L.PopupOptions {
-	coords: O<L.LatLngExpression>
+	coords: MaybeObservable<L.LatLngExpression>
 	onclose?: (ev: L.PopupEvent) => any
 }
 
@@ -245,8 +244,8 @@ export class Popup extends Component {
 
 
 export interface SVGMarkerAttributes extends L.MarkerOptions {
-	coords: O<L.LatLngExpression>
-	className?: O<string>
+	coords: MaybeObservable<L.LatLngExpression>
+	className?: MaybeObservable<string>
 	onclick?: (ev: MouseEvent) => any
 	// popup ?
 	// onclick ?
