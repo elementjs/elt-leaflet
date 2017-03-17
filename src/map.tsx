@@ -42,7 +42,7 @@ function _foreach<T>(ob: ArrayOrSingle<T> | null, callback: (t: T) => any) {
 }
 
 function _addLayer(node: Node, layer: L.Layer) {
-	const parent = Layer.get(node)
+	const parent = Layer.getIfExists(node)
 	if (parent) {
 		parent.layer.addLayer(layer)
 		return
@@ -143,7 +143,7 @@ export class Layer extends Component {
 
 	@onmount
 	addToMap(node: Node, parent: Node) {
-		const layer = Layer.get(parent)
+		const layer = Layer.getIfExists(parent)
 		if (layer) {
 			layer.layer.addLayer(this.layer)
 			return
@@ -151,8 +151,7 @@ export class Layer extends Component {
 
 		// If there was no Layer above us, just add ourselves
 		// to the map.
-		const map = Map.get(node)
-		map.leafletMap.addLayer(this.layer)
+		Map.get(node).leafletMap.addLayer(this.layer)
 	}
 
 	@onunmount
@@ -172,11 +171,13 @@ export class Layer extends Component {
 
 	update(obj: ArrayOrSingle<L.Layer>) {
 			const map = Map.get(this.node)
-			const layer = Layer.get(this.node.parentNode!)
+			const layer = Layer.getIfExists(this.node.parentNode!)
 
 			_foreach(this.current, ob => ob.remove())
 			this.current = obj
-			_foreach(obj, ob => layer ? layer.layer.addLayer(ob) : ob.addTo(map.leafletMap))
+			_foreach(obj, ob => {
+				layer ? layer.layer.addLayer(ob) : ob.addTo(map.leafletMap)
+			})
 	}
 
 	render(children: DocumentFragment) {
