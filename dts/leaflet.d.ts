@@ -144,6 +144,8 @@ declare namespace L {
     export type PointTuple = [number, number];
 
     export class Point extends Class {
+	x: number;
+        y: number;
         clone(): Point;
         add(otherPoint: PointExpression): Point; // investigate if this mutates or returns a new instance
         subtract(otherPoint: PointExpression): Point;
@@ -1239,8 +1241,8 @@ declare namespace L {
         // Conversion methods
         getZoomScale(toZoom: number, fromZoom: number): number;
         getScaleZoom(scale: number, fromZoom: number): number;
-        project(latlng: LatLngExpression, zoom: number): Point;
-        unproject(point: PointExpression, zoom: number): LatLng;
+        project(latlng: LatLngExpression, zoom?: number): Point;
+        unproject(point: PointExpression, zoom?: number): LatLng;
         layerPointToLatLng(point: PointExpression): LatLng;
         latLngToLayerPoint(latlng: LatLngExpression): Point;
         wrapLatLng(latlng: LatLngExpression): LatLng;

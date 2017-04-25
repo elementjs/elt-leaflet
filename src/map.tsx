@@ -22,7 +22,6 @@ export const L = Leaflet;
 
 (window as any).L_NO_TOUCH = true
 
-
 export interface MapAttributes extends BasicAttributes {
 	center?: MaybeObservable<L.LatLng>
 	zoom?: MaybeObservable<number>

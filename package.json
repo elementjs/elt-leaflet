@@ -16,8 +16,6 @@
     "leaflet": "^1.0.1"
   },
   "devDependencies": {
-    "@types/geojson": "0.0.28",
-    "@types/leaflet": "^1.0.38",
     "dts-bundle": "^0.6.1",
     "source-map-loader": "^0.1.5",
     "webpack": "^1.13.3"
