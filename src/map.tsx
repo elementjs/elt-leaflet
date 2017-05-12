@@ -4,7 +4,6 @@ import {
 	BasicAttributes,
 	Component,
 	Controller,
-	HTMLComponent,
 	getChildren,
 	o,
 	MaybeObservable,
@@ -54,7 +53,7 @@ function _addLayer(node: Node, layer: L.Layer) {
 }
 
 
-export class Map extends HTMLComponent {
+export class Map extends Component {
 
 	attrs: MapAttributes
 	private l: L.Map | null
@@ -129,13 +128,16 @@ export const DOMIcon = L.Icon.extend({
 
 
 
+export interface LayerAttributes extends BasicAttributes {
+	contents?: MaybeObservable<ArrayOrSingle<L.Layer>>,
+}
+
+
 export class Layer extends Component {
 
 	name = 'leaflet layer'
 
-	attrs: {
-		contents?: MaybeObservable<ArrayOrSingle<L.Layer>>,
-	}
+	attrs: LayerAttributes
 
 	layer = L.featureGroup()
 	current: ArrayOrSingle<L.Layer> | null = null
@@ -186,8 +188,9 @@ export class Layer extends Component {
 
 }
 
+export type PopupOptionsAttrs = L.PopupOptions & BasicAttributes
 
-export interface PopupAttributes extends L.PopupOptions {
+export interface PopupAttributes extends PopupOptionsAttrs {
 	coords: MaybeObservable<L.LatLngExpression>
 	onclose?: (ev: L.PopupEvent) => any
 }
@@ -240,7 +243,7 @@ export class Popup extends Component {
 		this.popup.remove()
 	}
 
-	render(children: DocumentFragment) {
+	render(children: DocumentFragment): HTMLElement {
 		this.contents = <div class='dl--popup'>
 			{children}
 		</div> as HTMLElement
@@ -259,9 +262,6 @@ export interface SVGMarkerAttributes extends L.MarkerOptions {
 	coords: MaybeObservable<L.LatLngExpression>
 	className?: MaybeObservable<string>
 	onclick?: (ev: MouseEvent) => any
-	// popup ?
-	// onclick ?
-	// ???
 }
 
 
@@ -304,7 +304,7 @@ export abstract class SVGMarker extends Component {
 
 	abstract renderSVG(ch: DocumentFragment): Node
 
-	render(children: DocumentFragment) {
+	render(children: DocumentFragment): HTMLElement {
 		this.marker = this.renderMarker(children)
 
 		this.observe(this.attrs.coords, coords => this.marker.setLatLng(coords))
@@ -320,7 +320,7 @@ export class Centerer extends Component {
 
 	attrs: {center: Observable<L.LatLngExpression | L.LatLngBoundsExpression>}
 
-	render() {
+	render(): HTMLElement {
 		this.observe(this.attrs.center, center => {
 			var map = Map.get(this.node)
 			if (center) {
@@ -406,7 +406,7 @@ export class MapWatcher extends Component {
 		this.leaflet_map = null
 	}
 
-	render() {
+	render(): HTMLElement {
 		return document.createComment('map watcher')
 	}
 
