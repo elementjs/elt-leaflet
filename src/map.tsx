@@ -4,15 +4,18 @@ import {
 	BasicAttributes,
 	Component,
 	Controller,
+	Display,
 	getChildren,
 	o,
 	MaybeObservable,
 	Observable,
+	observe,
 	onmount,
 	onfirstmount,
 	onunmount,
 	onrender,
-	VirtualHolder,
+	Verb,
+	VirtualHolder
 } from 'domic'
 
 import * as Leaflet from 'leaflet'
@@ -117,7 +120,7 @@ export class Map extends Component {
 
 
 export interface DOMIconOptions extends L.DivIconOptions {
-	node: HTMLElement
+	node: Element
 }
 
 export const DOMIcon = L.Icon.extend({
@@ -188,27 +191,45 @@ export class Layer extends Component {
 
 }
 
-export type PopupOptionsAttrs = L.PopupOptions & BasicAttributes
 
-export interface PopupAttributes extends PopupOptionsAttrs {
+//////////////////////////////////////////////////////////////////////////
+
+export interface PopupOptions extends L.PopupOptions {
 	coords: MaybeObservable<L.LatLngExpression>
 	onclose?: (ev: L.PopupEvent) => any
 }
 
 
-export class Popup extends Component {
+export class PopupController extends Controller {
 
-	attrs: PopupAttributes
-	contents: HTMLElement
+	contents: Element
 	popup: L.Popup
+
+	constructor(
+		public coords: MaybeObservable<L.LatLngExpression>, 
+		children: Node | (() => Node),
+		public onclose?: (ev: L.PopupEvent) => any,
+		public options?: L.PopupOptions
+	) {
+		super()
+
+		this.contents = <div class='dl--popup'>
+			{typeof children === 'function' ? Display(children) : children}
+		</div>
+
+		this.observe(this.coords, coords => {
+			this.popup && this.popup.setLatLng(coords)
+		})
+
+	}
 
 	@onfirstmount
 	attachToLayer(node: Node) {
 		const map = Map.get(node).leafletMap
 
-		this.popup = L.popup(this.attrs)
-		.setContent(this.contents)
-		.setLatLng(o.get(this.attrs.coords))
+		this.popup = L.popup(this.options || {})
+		.setContent(this.contents as any)
+		.setLatLng(o.get(this.coords))
 
 		this.popup.addEventListener('add', () => {
 			// on resize le popup tout de suite
@@ -219,14 +240,14 @@ export class Popup extends Component {
 			})
 		})
 
-		if (this.attrs.onclose) {
+		if (this.onclose) {
 			var close = (ev: L.PopupEvent) => {
 				if (ev.popup === this.popup) {
 					map.removeEventListener('popupclose', close)
 					// Only run this if the popup was closed by a map interaction,
 					// not if we were unmounted.
 					if (!this.mounted) return
-					this.attrs.onclose!(ev)
+					this.onclose!(ev)
 				}
 			}
 
@@ -243,85 +264,28 @@ export class Popup extends Component {
 		this.popup.remove()
 	}
 
-	render(children: DocumentFragment): HTMLElement {
-		this.contents = <div class='dl--popup'>
-			{children}
-		</div> as HTMLElement
-
-		this.observe(this.attrs.coords, coords => {
-			this.popup && this.popup.setLatLng(coords)
-		})
-
-		return document.createComment('popup')
-	}
-
 }
 
 
-export interface SVGMarkerAttributes extends L.MarkerOptions {
-	coords: MaybeObservable<L.LatLngExpression>
-	className?: MaybeObservable<string>
-	onclick?: (ev: MouseEvent) => any
+export function DisplayPopup(
+	coords: MaybeObservable<L.LatLngExpression>, 
+	popup: Element | (() => Element),
+	onclose?: (ev: L.PopupEvent) => any,
+	options?: L.PopupOptions
+): Comment {
+	var comment = document.createComment('popup')
+	var ctl = new PopupController(coords, popup, onclose, options)
+	ctl.bindToNode(comment)
+	return comment
 }
 
 
-/**
- *
- */
-export abstract class SVGMarker extends Component {
+export class MapCenterVerb extends Verb {
 
-	attrs: SVGMarkerAttributes
-	marker: L.Marker
+	constructor(center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
+		super('map centerer')
 
-	@onmount
-	addToMap(node: Node) {
-		_addLayer(node, this.marker)
-	}
-
-	@onunmount
-	removeFromMap(node: Node) {
-		this.marker.remove()
-	}
-
-	/**
-	 * extend this.
-	 */
-	renderMarker(children: DocumentFragment): L.Marker {
-
-		const opts: L.MarkerOptions = {}
-		const icon_opts: DOMIconOptions = {node: this.renderSVG(children) as HTMLElement}
-
-		opts.icon = new DOMIcon(icon_opts)
-
-		let mark = L.marker(o.get(this.attrs.coords), opts)
-
-		if (this.attrs.onclick) {
-			mark.addEventListener('click', this.attrs.onclick)
-		}
-
-		return mark
-	}
-
-	abstract renderSVG(ch: DocumentFragment): Node
-
-	render(children: DocumentFragment): HTMLElement {
-		this.marker = this.renderMarker(children)
-
-		this.observe(this.attrs.coords, coords => this.marker.setLatLng(coords))
-
-		return document.createComment('marker')
-	}
-
-}
-
-
-
-export class Centerer extends Component {
-
-	attrs: {center: Observable<L.LatLngExpression | L.LatLngBoundsExpression>}
-
-	render(): HTMLElement {
-		this.observe(this.attrs.center, center => {
+		this.observe(center, center => {
 			var map = Map.get(this.node)
 			if (center) {
 				if (center instanceof L.LatLng) {
@@ -332,20 +296,22 @@ export class Centerer extends Component {
 					})
 				}
 			}
-
 		})
 
-		return document.createComment('centerer')
 	}
 
+}
+
+export function CenterMap(center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
+	var c = new MapCenterVerb(center)
+	return c.node
 }
 
 
 
 export type LeafletCallback<T extends L.Event> = (ev: T) => any
 
-export interface MapWatcherAttributes {
-
+export interface MapWatcherCallbacks {
 	autopanstart?: LeafletCallback<L.Event>
 	baselayerchange?: LeafletCallback<L.LayersControlEvent>
 	click?: LeafletCallback<L.MouseEvent>
@@ -379,35 +345,55 @@ export interface MapWatcherAttributes {
 	zoomend?: LeafletCallback<L.Event>
 	zoomlevelschange?:	LeafletCallback<L.Event>
 	zoomstart?: LeafletCallback<L.Event>
-
 }
 
 
-export class MapWatcher extends Component {
+export class MapWatcher extends Verb {
 
-	attrs: MapWatcherAttributes
 	leaflet_map: L.Map | null
+
+	constructor(public callbacks: MapWatcherCallbacks) {
+		super('map watcher')
+	}
 
 	@onmount
 	associateCallbacksToEvents() {
 		const map = this.leaflet_map = Map.get(this.node).leafletMap
 
-		for (var prop in this.attrs)
-			map.on(prop, (this.attrs as any)[prop])
+		for (var prop in this.callbacks)
+			map.on(prop, (this.callbacks as any)[prop])
 	}
 
 	@onunmount
 	unassociate() {
 		const map = this.leaflet_map!
 
-		for (var prop in this.attrs)
-			map.off(prop, (this.attrs as any)[prop])
+		for (var prop in this.callbacks)
+			map.off(prop, (this.callbacks as any)[prop])
 
 		this.leaflet_map = null
 	}
 
-	render(): HTMLElement {
-		return document.createComment('map watcher')
-	}
+}
 
+export function WatchMap(callbacks: MapWatcherCallbacks) {
+	var res = new MapWatcher(callbacks)
+	return res.node
+}
+
+
+export function DisplayMarker(coords: MaybeObservable<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
+	var co = o(coords)
+	var comment = document.createComment('  marker  ')
+
+	options.icon = new DOMIcon({node: marker})
+	let mark = L.marker(co.get(), options)
+
+	onmount((node) => Map.get(node).addLayer(mark))(comment as any)
+	onunmount(() => mark.remove())(comment as any)
+
+	if (coords instanceof Observable)
+		observe(co, coords => mark.setLatLng(coords))(comment)
+
+	return comment
 }
