@@ -4,6 +4,7 @@ import {
 	BasicAttributes,
 	Component,
 	Controller,
+	DisplayIf,
 	getChildren,
 	o,
 	MaybeObservable,
@@ -69,7 +70,7 @@ export class Map extends Component {
 	drawMap() {
 		var map = this.l = L.map(this.node, {
 			zoomControl: false,
-			minZoom: 7,
+			// minZoom: 7,
 			zoom: 13,
 			attributionControl: false,
 			// zoom sur le centre de la france.
@@ -205,7 +206,7 @@ export class PopupController extends Controller {
 	popup: L.Popup
 
 	constructor(
-		public coords: MaybeObservable<L.LatLngExpression>, 
+		public coords: MaybeObservable<L.LatLngExpression>,
 		children: Node | (() => Node),
 		public onclose?: (ev: L.PopupEvent) => any,
 		public options?: L.PopupOptions
@@ -213,7 +214,7 @@ export class PopupController extends Controller {
 		super()
 
 		this.contents = <div class='dl--popup'>
-			{typeof children === 'function' ? Display(children) : children}
+			{typeof children === 'function' ? DisplayIf(true, children) : children}
 		</div>
 
 		this.observe(this.coords, coords => {
@@ -267,7 +268,7 @@ export class PopupController extends Controller {
 
 
 export function DisplayPopup(
-	coords: MaybeObservable<L.LatLngExpression>, 
+	coords: MaybeObservable<L.LatLngExpression>,
 	popup: Element | (() => Element),
 	onclose?: (ev: L.PopupEvent) => any,
 	options?: L.PopupOptions

@@ -206,21 +206,29 @@ export class Grouper<T extends HasLatLng> extends Component {
     this.o_multi.set(multis)
     this.o_clusters.set(clusters.map(cluster => {
       var p = L.point(0, 0) as GroupPoint<T>
-      var x = 0
-      var y = 0
+      var min_x = Number.MAX_VALUE
+      var max_x = Number.MIN_VALUE
+      var min_y = Number.MAX_VALUE
+      var max_y = Number.MIN_VALUE
 
       var items: T[] = p.items = []
       for (var point of cluster) {
-        x += point.x
-        y += point.y
+        if (point.x < min_x)
+          min_x = point.x
+        if (point.x > max_x)
+          max_x = point.x
+        if (point.y < min_y)
+          min_y = point.y
+        if (point.y > max_y)
+          max_y = point.y
 
         for (var it of point.items)
           items.push(it)
       }
 
       // On fait le barycentre
-      p.x = x / cluster.length
-      p.y = y / cluster.length
+      p.x = max_x - (max_x - min_x) / 2
+      p.y = max_y - (max_y - min_y) / 2
       return p
     }))
   }
