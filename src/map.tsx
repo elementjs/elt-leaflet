@@ -11,9 +11,7 @@ import {
 	Observable,
 	observe,
 	onmount,
-	onfirstmount,
 	onunmount,
-	onrender,
 	Verb,
 	VirtualHolder
 } from 'domic'
@@ -66,8 +64,7 @@ export class Map extends Component {
 		return this.l
 	}
 
-	@onmount
-	drawMap() {
+	onmount() {
 		var map = this.l = L.map(this.node, {
 			zoomControl: false,
 			// minZoom: 7,
@@ -85,8 +82,7 @@ export class Map extends Component {
 		requestAnimationFrame(() => map.invalidateSize({}))
 	}
 
-	@onunmount
-	cleanup() {
+	onunmount() {
 		var map = this.leafletMap
 		map.eachLayer(l => {
 			map.removeLayer(l)
@@ -105,13 +101,15 @@ export class Map extends Component {
 
 	render(children: DocumentFragment) {
 
-		this.observe(this.attrs.center, center => {
-			if (center) this.leafletMap.panTo(center, {animate: true})
-		})
+		if (this.attrs.center)
+			this.observe(this.attrs.center, center => {
+				if (center) this.leafletMap.panTo(center, {animate: true})
+			})
 
-		this.observe(this.attrs.zoom, zoom => {
-			if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
-		})
+		if (this.attrs.zoom)
+			this.observe(this.attrs.zoom, zoom => {
+				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
+			})
 
 		return <div class='domic-leaflet-map'>{children}</div>
 	}
@@ -145,8 +143,7 @@ export class Layer extends Component {
 	layer = L.featureGroup()
 	current: ArrayOrSingle<L.Layer> | null = null
 
-	@onmount
-	addToMap(node: Node, parent: Node) {
+	onmount(node: Node, parent: Node) {
 		const layer = Layer.getIfExists(parent)
 		if (layer) {
 			layer.layer.addLayer(this.layer)
@@ -158,14 +155,12 @@ export class Layer extends Component {
 		Map.get(node).leafletMap.addLayer(this.layer)
 	}
 
-	@onunmount
-	remove() {
+	onunmount() {
 		_foreach(this.current, ob => ob.remove())
 		this.layer.remove()
 	}
 
-	@onrender
-	linkContent() {
+	onrender() {
 
 		// If there is contents, just add them.
 		if (this.attrs.contents) {
@@ -223,8 +218,9 @@ export class PopupController extends Controller {
 
 	}
 
-	@onfirstmount
-	attachToLayer(node: Node) {
+	onmount(node: Node) {
+		if (this.popup) return
+
 		const map = Map.get(node).leafletMap
 
 		this.popup = L.popup(this.options || {})
@@ -258,8 +254,7 @@ export class PopupController extends Controller {
 		map.openPopup(this.popup)
 	}
 
-	@onunmount
-	cleanup() {
+	onunmount() {
 		// popup is removed if our node is gone from the DOM.
 		this.popup.remove()
 	}
@@ -356,16 +351,14 @@ export class MapWatcher extends Verb {
 		super('map watcher')
 	}
 
-	@onmount
-	associateCallbacksToEvents() {
+	onmount() {
 		const map = this.leaflet_map = Map.get(this.node).leafletMap
 
 		for (var prop in this.callbacks)
 			map.on(prop, (this.callbacks as any)[prop])
 	}
 
-	@onunmount
-	unassociate() {
+	onunmount() {
 		const map = this.leaflet_map!
 
 		for (var prop in this.callbacks)

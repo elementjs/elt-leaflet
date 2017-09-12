@@ -6,8 +6,6 @@ import {
   MaybeObservable,
   o,
   Observable,
-  onmount,
-  onunmount,
   Repeat,
 } from 'domic'
 
@@ -233,13 +231,11 @@ export class Grouper<T extends HasLatLng> extends Component {
     }))
   }
 
-  @onmount
-  protected connectToMap() {
+  onmount() {
     this.map = Map.get(this.node).leafletMap
   }
 
-  @onunmount
-  protected unconnectMap() {
+  onunmount() {
     this.map = null!
   }
 
