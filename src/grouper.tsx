@@ -1,6 +1,6 @@
 
 import {
-  BasicAttributes,
+  Attrs,
   Component,
   d,
   MaybeObservable,
@@ -28,21 +28,17 @@ export interface GroupPoint<T> extends L.Point {
   y_index: number
 }
 
-export type Cluster<T> = {
-  latlng: L.LatLng
-  items: T[]
-}
-
 
 /////////////////////////////////////
 
-export interface GrouperAttributes<T> extends BasicAttributes {
+export interface GrouperAttributes<T> extends Attrs {
   list: MaybeObservable<T[]>
   epsilon?: number
   single?: (latlng: L.LatLng, item: T) => Node
   multi?: (latlng: L.LatLng, items: T[]) => Node
   grouped?: (latlng: L.LatLng, items: T[]) => Node
 }
+
 
 export class Grouper<T extends HasLatLng> extends Component {
 
@@ -231,11 +227,11 @@ export class Grouper<T extends HasLatLng> extends Component {
     }))
   }
 
-  onmount() {
-    this.map = Map.get(this.node).leafletMap
+  inserted(node: Node) {
+    this.map = Map.get(node)!.leafletMap
   }
 
-  onunmount() {
+  removed() {
     this.map = null!
   }
 

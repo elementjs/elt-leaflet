@@ -1,17 +1,17 @@
 
 import {
 	ArrayOrSingle,
-	BasicAttributes,
+	Attrs,
 	Component,
-	Controller,
+	Mixin,
 	DisplayIf,
 	getChildren,
 	o,
 	MaybeObservable,
 	Observable,
 	observe,
-	onmount,
-	onunmount,
+	inserted,
+	removed,
 	Verb,
 	VirtualHolder
 } from 'domic'
@@ -22,7 +22,7 @@ export const L = Leaflet;
 
 (window as any).L_NO_TOUCH = true
 
-export interface MapAttributes extends BasicAttributes {
+export interface MapAttributes extends Attrs {
 	center?: MaybeObservable<L.LatLng>
 	zoom?: MaybeObservable<number>
 	tileLayer: string
@@ -41,7 +41,7 @@ function _foreach<T>(ob: ArrayOrSingle<T> | null, callback: (t: T) => any) {
 }
 
 function _addLayer(node: Node, layer: L.Layer) {
-	const parent = Layer.getIfExists(node)
+	const parent = Layer.get(node)
 	if (parent) {
 		parent.layer.addLayer(layer)
 		return
@@ -64,8 +64,8 @@ export class Map extends Component {
 		return this.l
 	}
 
-	onmount() {
-		var map = this.l = L.map(this.node, {
+	inserted(node: HTMLElement) {
+		var map = this.l = L.map(node, {
 			zoomControl: false,
 			// minZoom: 7,
 			zoom: 13,
@@ -82,7 +82,7 @@ export class Map extends Component {
 		requestAnimationFrame(() => map.invalidateSize({}))
 	}
 
-	onunmount() {
+	removed() {
 		var map = this.leafletMap
 		map.eachLayer(l => {
 			map.removeLayer(l)
@@ -129,7 +129,7 @@ export const DOMIcon = L.Icon.extend({
 
 
 
-export interface LayerAttributes extends BasicAttributes {
+export interface LayerAttributes extends Attrs {
 	contents?: MaybeObservable<ArrayOrSingle<L.Layer>>,
 }
 
@@ -143,8 +143,8 @@ export class Layer extends Component {
 	layer = L.featureGroup()
 	current: ArrayOrSingle<L.Layer> | null = null
 
-	onmount(node: Node, parent: Node) {
-		const layer = Layer.getIfExists(parent)
+	inserted(node: Node, parent: Node) {
+		const layer = Layer.get(parent)
 		if (layer) {
 			layer.layer.addLayer(this.layer)
 			return
@@ -152,30 +152,32 @@ export class Layer extends Component {
 
 		// If there was no Layer above us, just add ourselves
 		// to the map.
-		Map.get(node).leafletMap.addLayer(this.layer)
+		var map = Map.get(node)
+		if (!map) throw new Error('no map to add this layer to')
+		map.leafletMap.addLayer(this.layer)
 	}
 
-	onunmount() {
+	removed() {
 		_foreach(this.current, ob => ob.remove())
 		this.layer.remove()
 	}
 
-	onrender() {
+	init(node: Node) {
 
 		// If there is contents, just add them.
 		if (this.attrs.contents) {
-			this.observe(this.attrs.contents, layer => this.update(layer))
+			this.observe(this.attrs.contents, layer => this.update(layer, node))
 		}
 	}
 
-	update(obj: ArrayOrSingle<L.Layer>) {
-			const map = Map.get(this.node)
-			const layer = Layer.getIfExists(this.node.parentNode!)
+	update(obj: ArrayOrSingle<L.Layer>, node: Node) {
+			const map = Map.get(node)
+			const layer = Layer.get(node.parentNode!)
 
 			_foreach(this.current, ob => ob.remove())
 			this.current = obj
 			_foreach(obj, ob => {
-				layer ? layer.layer.addLayer(ob) : ob.addTo(map.leafletMap)
+				layer ? layer.layer.addLayer(ob) : map ? ob.addTo(map.leafletMap) : null // this null is an error
 			})
 	}
 
@@ -195,7 +197,7 @@ export interface PopupOptions extends L.PopupOptions {
 }
 
 
-export class PopupController extends Controller {
+export class PopupMixin extends Mixin {
 
 	contents: Element
 	popup: L.Popup
@@ -218,10 +220,10 @@ export class PopupController extends Controller {
 
 	}
 
-	onmount(node: Node) {
+	inserted(node: Node) {
 		if (this.popup) return
 
-		const map = Map.get(node).leafletMap
+		const map = Map.get(node)!.leafletMap
 
 		this.popup = L.popup(this.options || {})
 		.setContent(this.contents as any)
@@ -254,7 +256,7 @@ export class PopupController extends Controller {
 		map.openPopup(this.popup)
 	}
 
-	onunmount() {
+	removed() {
 		// popup is removed if our node is gone from the DOM.
 		this.popup.remove()
 	}
@@ -269,8 +271,8 @@ export function DisplayPopup(
 	options?: L.PopupOptions
 ): Comment {
 	var comment = document.createComment('popup')
-	var ctl = new PopupController(coords, popup, onclose, options)
-	ctl.bindToNode(comment)
+	var ctl = new PopupMixin(coords, popup, onclose, options)
+	ctl.addToNode(comment)
 	return comment
 }
 
@@ -282,6 +284,7 @@ export class MapCenterVerb extends Verb {
 
 		this.observe(center, center => {
 			var map = Map.get(this.node)
+			if (!map) return // this should be an error.
 			if (center) {
 				if (center instanceof L.LatLng) {
 					map.leafletMap.setView(center as L.LatLngExpression, map.leafletMap.getZoom())
@@ -351,14 +354,14 @@ export class MapWatcher extends Verb {
 		super('map watcher')
 	}
 
-	onmount() {
-		const map = this.leaflet_map = Map.get(this.node).leafletMap
+	inserted() {
+		const map = this.leaflet_map = Map.get(this.node)!.leafletMap
 
 		for (var prop in this.callbacks)
 			map.on(prop, (this.callbacks as any)[prop])
 	}
 
-	onunmount() {
+	removed() {
 		const map = this.leaflet_map!
 
 		for (var prop in this.callbacks)
@@ -382,11 +385,12 @@ export function DisplayMarker(coords: MaybeObservable<L.LatLngExpression>, marke
 	options.icon = new DOMIcon({node: marker})
 	let mark = L.marker(co.get(), options)
 
-	onmount((node) => Map.get(node).addLayer(mark))(comment as any)
-	onunmount(() => mark.remove())(comment as any)
+	inserted((node) => Map.get(node)!.addLayer(mark)).addToNode(comment)
+
+	removed(() => mark.remove()).addToNode(comment)
 
 	if (coords instanceof Observable)
-		observe(co, coords => mark.setLatLng(coords))(comment)
+		observe(co, coords => mark.setLatLng(coords)).addToNode(comment)
 
 	return comment
 }
