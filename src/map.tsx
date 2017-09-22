@@ -279,10 +279,12 @@ export function DisplayPopup(
 
 export class MapCenterVerb extends Verb {
 
-	constructor(center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
+	constructor(public center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
 		super('map centerer')
+	}
 
-		this.observe(center, center => {
+	init() {
+		this.observe(this.center, center => {
 			var map = Map.get(this.node)
 			if (!map) return // this should be an error.
 			if (center) {
@@ -301,8 +303,7 @@ export class MapCenterVerb extends Verb {
 }
 
 export function CenterMap(center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
-	var c = new MapCenterVerb(center)
-	return c.node
+	return MapCenterVerb.create(center)
 }
 
 
@@ -373,24 +374,34 @@ export class MapWatcher extends Verb {
 }
 
 export function WatchMap(callbacks: MapWatcherCallbacks) {
-	var res = new MapWatcher(callbacks)
-	return res.node
+	return MapWatcher.create(callbacks)
+}
+
+
+export class MarkerDisplayer extends Verb {
+	marker: L.Marker
+
+	constructor(public coords: MaybeObservable<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
+		super('marker')
+	}
+
+	init() {
+		this.options.icon = new DOMIcon({node: this.dom_marker})
+		this.marker = L.marker(o.get(this.coords), this.options)
+
+		this.observe(this.coords, co => this.marker.setLatLng(co))
+	}
+
+	inserted(node: Node) {
+		Map.get(node)!.addLayer(this.marker)
+	}
+
+	removed(node: Node) {
+		this.marker.remove()
+	}
 }
 
 
 export function DisplayMarker(coords: MaybeObservable<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
-	var co = o(coords)
-	var comment = document.createComment('  marker  ')
-
-	options.icon = new DOMIcon({node: marker})
-	let mark = L.marker(co.get(), options)
-
-	inserted((node) => Map.get(node)!.addLayer(mark)).addToNode(comment)
-
-	removed(() => mark.remove()).addToNode(comment)
-
-	if (coords instanceof Observable)
-		observe(co, coords => mark.setLatLng(coords)).addToNode(comment)
-
-	return comment
+	return MarkerDisplayer.create(coords, marker, options)
 }
