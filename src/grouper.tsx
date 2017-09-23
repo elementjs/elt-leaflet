@@ -231,10 +231,6 @@ export class Grouper<T extends HasLatLng> extends Verb {
 
     // On observe la liste originale
     this.observe(this.list, (lst, old) => {
-      // We want to make sure that our previously sent
-      // observers are not going to mess up our list.
-      for (var ob of cluster_obs)
-        ob.stopObservers()
 
       var same = old && lst.length === old.length
       if (old && lst.length === old.length) {
@@ -248,6 +244,10 @@ export class Grouper<T extends HasLatLng> extends Verb {
       }
 
       if (!same) {
+        // We want to make sure that our previously sent
+        // observers are not going to mess up our list.
+        for (var ob of cluster_obs)
+          ob.stopObservers()
         this.recompute()
       }
 
