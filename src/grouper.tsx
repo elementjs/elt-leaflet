@@ -89,7 +89,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
     public list: Observable<T[]>,
     public single: GrouperCallback<T>,
     public multi: GrouperCallbackMulti<T>,
-    public epsilon: number = 20
+    public epsilon: number = 35
   ) {
     super('geogrouper')
     this.bound_recompute = _debounce(() => this.recompute(), 1)
@@ -332,7 +332,7 @@ export function GeoGroup<T extends HasLatLng>(
   options = {
     // Tous les points à moins de 15 pixels de distance les uns des autres
     //
-    epsilon: 20
+    epsilon: 35
   }
 ): Node {
   return Grouper.create(items, single, multi, options.epsilon)
