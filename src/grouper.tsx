@@ -57,6 +57,15 @@ function _for<T>(start: number, dir: number, lst: GroupPoint<T>[], fn: (p: Group
 }
 
 
+function _debounce(func: () => void, wait = 50) {
+  let h: number;
+  return () => {
+      clearTimeout(h);
+      h = setTimeout(() => func(), wait);
+  };
+}
+
+
 export type GrouperCallback<T> = (item: Observable<T>, latlng: L.LatLng) => (Element | L.Marker)
 export type GrouperCallbackMulti<T> = (item: Observable<T[]>, latlng: L.LatLng) => (Element | L.Marker)
 
@@ -83,7 +92,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
     public epsilon: number = 20
   ) {
     super('geogrouper')
-    this.bound_recompute = () => this.recompute()
+    this.bound_recompute = _debounce(() => this.recompute(), 1)
   }
 
   /**
@@ -105,8 +114,9 @@ export class Grouper<T extends HasLatLng> extends Verb {
       var points = cluster.points
       var dx = p.x - cluster.x
       var dy = p.y - cluster.y
+      var eps = epsilon + 4 * Math.log2(points.length)
 
-      if (dx * dx + dy * dy <= (epsilon + 2 * points.length) * (epsilon + 2 * points.length)) {
+      if (dx * dx + dy * dy <= eps * eps) {
         var l = points.length
         // readjust the cluster position
         // this nifty formula allows us to avoid computing the full
@@ -248,7 +258,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
         // observers are not going to mess up our list.
         for (var ob of cluster_obs)
           ob.stopObservers()
-        this.recompute()
+        this.bound_recompute()
       }
 
     })
