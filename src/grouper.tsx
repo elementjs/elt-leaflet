@@ -246,6 +246,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
       if (old && lst.length === old.length) {
         var different = false
         for (var i = 0; i < lst.length; i++) {
+          if (!lst[i].latlng()) continue
           if (!lst[i].latlng().equals(old[i].latlng())) {
             same = false
             break
