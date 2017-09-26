@@ -156,7 +156,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
     for (var i = 0; i < lst.length; i++) {
       var item = lst[i]
       var ll = item.latlng()
-      if (!bounds.contains(ll)) continue
+      if (!ll || !bounds.contains(ll)) continue
       var point = this.map.project(ll, zoom_level) as GroupPoint<T>
 
       point.index = i
