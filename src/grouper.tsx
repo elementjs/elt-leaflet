@@ -91,7 +91,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
     public multi: GrouperCallbackMulti<T>,
     public epsilon: number = 35
   ) {
-    super('geogrouper')
+    super()
     this.bound_recompute = _debounce(() => this.recompute(), 1)
   }
 

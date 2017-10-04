@@ -12,8 +12,7 @@ import {
 	observe,
 	inserted,
 	removed,
-	Verb,
-	VirtualHolder
+	Verb
 } from 'domic'
 
 import * as L from 'leaflet'
@@ -116,7 +115,7 @@ export class MapCenterVerb extends Verb {
 	map: L.Map
 
 	constructor(public center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
-		super('map centerer')
+		super()
 	}
 
 	init() {
@@ -193,7 +192,7 @@ export class MapWatcher extends Verb {
 	leaflet_map: L.Map | null
 
 	constructor(public callbacks: MapWatcherCallbacks) {
-		super('map watcher')
+		super()
 	}
 
 	inserted() {
@@ -223,7 +222,7 @@ export class MarkerDisplayer extends Verb {
 	marker: L.Marker
 
 	constructor(public coords: MaybeObservable<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
-		super('marker')
+		super()
 	}
 
 	init() {
@@ -251,7 +250,7 @@ export class LayerDisplayer extends Verb {
 	layer: L.LayerGroup
 
 	constructor(public layers: MaybeObservable<L.Layer[]|L.Layer>) {
-		super('layer displayer')
+		super()
 		this.layer = L.layerGroup([])
 	}
 
