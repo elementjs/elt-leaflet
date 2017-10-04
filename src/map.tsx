@@ -13,7 +13,7 @@ import {
 	inserted,
 	removed,
 	Verb
-} from 'domic'
+} from 'elt'
 
 import * as L from 'leaflet'
 

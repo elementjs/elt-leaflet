@@ -2,12 +2,11 @@
 import {
   Attrs,
   Verb,
-  d,
   MaybeObservable,
   o,
   Observable,
   Repeat,
-} from 'domic'
+} from 'elt'
 
 import {Map} from './map'
 import {domMarker} from './marker'

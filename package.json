@@ -1,12 +1,12 @@
 {
-  "name": "domic-leaflet",
-  "version": "0.1.9",
-  "repository": "https://github.com/ceymard/domic-leaflet",
+  "name": "elt-leaflet",
+  "version": "0.2.0",
+  "repository": "https://github.com/elementjs/elt-leaflet",
   "description": "some description",
   "license": "MIT",
   "typings": "./index.d.ts",
   "scripts": {
-    "build:dts": "dts-bundle --name domic-leaflet --main build/index.d.ts --out ../index.d.ts",
+    "build:dts": "dts-bundle --name elt-leaflet --main build/index.d.ts --out ../index.d.ts",
     "build:js": "tsc",
     "build": "npm run build:js && npm run build:dts",
     "watch": "parallel -u ::: 'ls build/*.d.ts | entr -d npm run build:dts' 'tscc -w'",
