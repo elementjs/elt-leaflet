@@ -100,7 +100,7 @@ export class Map extends Component {
 				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
 			})
 
-		return <div class='domic-leaflet-map'>{children}</div>
+		return <div class='elt-leaflet-map'>{children}</div>
 	}
 
 }
@@ -154,7 +154,7 @@ export interface MapWatcherCallbacks {
 	autopanstart?: LeafletCallback<L.LeafletEvent>
 	baselayerchange?: LeafletCallback<L.LayersControlEvent>
 	click?: LeafletCallback<L.LeafletMouseEvent>
-	// contextmenu?:	LeafletCallback<L.LeafletMouseEvent> FIXME incompatibility with domic.
+	// contextmenu?:	LeafletCallback<L.LeafletMouseEvent> FIXME incompatibility with elt.
 	dblclick?: LeafletCallback<L.LeafletMouseEvent>
 	keypress?: LeafletCallback<L.LeafletEvent> // FIXME there should be KeyboardEvent
 	layeradd?: LeafletCallback<L.LayerEvent>
