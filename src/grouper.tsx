@@ -6,6 +6,8 @@ import {
   o,
   Observable,
   Repeat,
+  ArrayTransformObservable,
+  _unmount
 } from 'elt'
 
 import {Map} from './map'
@@ -56,17 +58,8 @@ function _for<T>(start: number, dir: number, lst: GroupPoint<T>[], fn: (p: Group
 }
 
 
-function _debounce(func: () => void, wait = 50) {
-  let h: number;
-  return () => {
-      clearTimeout(h);
-      h = setTimeout(() => func(), wait);
-  };
-}
 
-
-export type GrouperCallback<T> = (item: Observable<T>, latlng: L.LatLng) => (Element | L.Marker)
-export type GrouperCallbackMulti<T> = (item: Observable<T[]>, latlng: L.LatLng) => (Element | L.Marker)
+export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker)
 
 
 export class Grouper<T extends HasLatLng> extends Verb {
@@ -74,24 +67,20 @@ export class Grouper<T extends HasLatLng> extends Verb {
   map: L.Map
   zoom_level: number
 
-  single_layer: L.LayerGroup = L.layerGroup([])
   cluster_layer: L.LayerGroup = L.layerGroup([])
-  bound_recompute: () => void
+  bound_recompute: () => void = () => this.recompute()
 
   lst_x: GroupPoint<T>[] = []
   lst_y: GroupPoint<T>[] = []
 
-  o_singles: Observable<GroupPoint<T>[]> = o([])
   o_clusters: Observable<Cluster<T>[]> = o([])
 
   constructor(
     public list: Observable<T[]>,
-    public single: GrouperCallback<T>,
     public multi: GrouperCallbackMulti<T>,
     public epsilon: number = 35
   ) {
     super()
-    this.bound_recompute = _debounce(() => this.recompute(), 1)
   }
 
   /**
@@ -180,7 +169,6 @@ export class Grouper<T extends HasLatLng> extends Verb {
    * Recompute the clusters or single points.
    */
   recompute() {
-    var singles: GroupPoint<T>[] = []
     var clusters: Cluster<T>[] = []
     this.computeLists()
 
@@ -199,20 +187,15 @@ export class Grouper<T extends HasLatLng> extends Verb {
         this.query(points[i], cluster, this.epsilon)
       }
 
-      if (points.length > 1)
-        clusters.push(cluster)
-      else
-        singles.push(point)
+      clusters.push(cluster)
     }
 
-    this.o_singles.set(singles)
     this.o_clusters.set(clusters)
   }
 
   inserted(node: Node) {
     this.map = Map.get(node)!.leafletMap
 
-    this.map.addLayer(this.single_layer)
     this.map.addLayer(this.cluster_layer)
 
     // Whenever the zoom level changes, we want to recompute
@@ -222,11 +205,23 @@ export class Grouper<T extends HasLatLng> extends Verb {
   }
 
   removed() {
+    this.unmountMarkers()
     this.cluster_layer.remove()
-    this.single_layer.remove()
     this.map.off('moveend', this.bound_recompute)
     this.map.off('zoomend', this.bound_recompute)
     this.map = null!
+  }
+
+  /**
+   * Remove all markers from the map.
+   */
+  unmountMarkers() {
+    for (var m of this.cluster_layer.getLayers()) {
+      var m2 = m as L.Marker
+      var node: Node = m2.getElement() || (m2.options.icon as any).node
+      if (node)
+        _unmount(node, node.parentNode!, node.previousSibling, node.nextSibling)
+    }
   }
 
   /**
@@ -236,7 +231,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
     // We have to track the observables we send back to the marker functions,
     // as they may be out of sync with the new list when it changes. When that
     // happens, we just disable them.
-    var cluster_obs: Observable<T[]>[] = []
+    // var child_observables: Observable<any>[] = []
 
     // On observe la liste originale
     this.observe(this.list, (lst, old) => {
@@ -256,33 +251,16 @@ export class Grouper<T extends HasLatLng> extends Verb {
       if (!same) {
         // We want to make sure that our previously sent
         // observers are not going to mess up our list.
-        for (var ob of cluster_obs)
-          ob.stopObservers()
+        this.unmountMarkers()
         this.bound_recompute()
       }
 
     })
 
-    var singlefn = this.single
     var multifn = this.multi
-    // var groupedfn = this.grouped || this.multi
 
-    this.observe(this.o_singles, points => {
-      // Cleanup the singles that were previously assigned.
-      this.single_layer.clearLayers()
-
-      for (var p of points) {
-        var ll = this.map.unproject(p, this.zoom_level)
-        var eltmarker = singlefn(this.list.p(p.index), ll)
-        var marker = eltmarker instanceof L.Marker ? eltmarker : domMarker(ll, eltmarker)
-        this.single_layer.addLayer(marker)
-      }
-    })
-
-    this.observe(this.o_clusters, clusters => {
+    this.observe(this.o_clusters, (clusters, previous) => {
       this.cluster_layer.clearLayers()
-
-      cluster_obs = []
 
       for (let c of clusters) {
         var ll = this.map.unproject(c, this.zoom_level)
@@ -290,20 +268,12 @@ export class Grouper<T extends HasLatLng> extends Verb {
         // For clusters, we create an virtual observable that remembers what the original
         // elements indices were and map them back to the original list if they change.
         let indices = c.points.map(c => c.index)
-        let obs = this.list.tf(
-          lst => indices.map(i => lst[i]),
-          new_lst => {
-            var lst = this.list.getShallowClone()
-            for (var i = 0; i < indices.length; i++) {
-              lst[indices[i]] = new_lst[i]
-            }
-            this.list.set(lst)
-          }
-        )
-        cluster_obs.push(obs)
+        let obs = this.list.arrayTransform(indices)
+        // child_observables.push(obs)
 
         var eltmarker = multifn(obs, ll)
         var marker = eltmarker instanceof L.Marker ? eltmarker : domMarker(ll, eltmarker)
+        // console.log(marker.getElement())
         this.cluster_layer.addLayer(marker)
       }
     })
@@ -327,7 +297,6 @@ export interface HasLatLng {
  */
 export function GeoGroup<T extends HasLatLng>(
   items: Observable<T[]>,
-  single: GrouperCallback<T>,
   multi: GrouperCallbackMulti<T>,
   options = {
     // Tous les points à moins de 15 pixels de distance les uns des autres
@@ -335,5 +304,5 @@ export function GeoGroup<T extends HasLatLng>(
     epsilon: 35
   }
 ): Node {
-  return Grouper.create(items, single, multi, options.epsilon)
+  return Grouper.create(items, multi, options.epsilon)
 }

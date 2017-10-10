@@ -109,12 +109,14 @@ export class Map extends Component {
 
 //////////////////////////////////////////////////////////////////////////
 
+export type CenterExpression = L.LatLngExpression | L.LatLngBoundsExpression | null | undefined
+
 
 export class MapCenterVerb extends Verb {
 
 	map: L.Map
 
-	constructor(public center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
+	constructor(public center: MaybeObservable<CenterExpression>) {
 		super()
 	}
 
@@ -142,7 +144,7 @@ export class MapCenterVerb extends Verb {
 
 }
 
-export function CenterMap(center: MaybeObservable<L.LatLngExpression | L.LatLngBoundsExpression>) {
+export function CenterMap(center: MaybeObservable<CenterExpression>) {
 	return MapCenterVerb.create(center)
 }
 
@@ -257,13 +259,14 @@ export class LayerDisplayer extends Verb {
 	init() {
 		this.observe(this.layers, layers => {
 			// update the layers in this group
+
 			if (!Array.isArray(layers))
 				layers = [layers]
 
 			for (var l of this.layer.getLayers())
 				l.remove()
 			for (l of layers)
-				this.layer.addLayer(l)
+				if (l) this.layer.addLayer(l)
 		})
 	}
 
@@ -279,6 +282,6 @@ export class LayerDisplayer extends Verb {
 }
 
 
-export function DisplayLayers(layers: MaybeObservable<L.Layer|L.Layer[]>) {
+export function DisplayLayers(layers: MaybeObservable<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
 	return LayerDisplayer.create(layers)
 }
