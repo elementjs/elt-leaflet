@@ -68,7 +68,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
   zoom_level: number
 
   cluster_layer: L.LayerGroup = L.layerGroup([])
-  bound_recompute: () => void = () => this.recompute()
+  bound_recompute: () => void = o.debounce(() => this.recompute(), 1)
 
   lst_x: GroupPoint<T>[] = []
   lst_y: GroupPoint<T>[] = []
@@ -205,23 +205,10 @@ export class Grouper<T extends HasLatLng> extends Verb {
   }
 
   removed() {
-    this.unmountMarkers()
     this.cluster_layer.remove()
     this.map.off('moveend', this.bound_recompute)
     this.map.off('zoomend', this.bound_recompute)
     this.map = null!
-  }
-
-  /**
-   * Remove all markers from the map.
-   */
-  unmountMarkers() {
-    for (var m of this.cluster_layer.getLayers()) {
-      var m2 = m as L.Marker
-      var node: Node = m2.getElement() || (m2.options.icon as any).node
-      if (node)
-        _unmount(node, node.parentNode!, node.previousSibling, node.nextSibling)
-    }
   }
 
   /**
@@ -231,7 +218,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
     // We have to track the observables we send back to the marker functions,
     // as they may be out of sync with the new list when it changes. When that
     // happens, we just disable them.
-    // var child_observables: Observable<any>[] = []
+    var child_observables: Observable<any>[] = []
 
     // On observe la liste originale
     this.observe(this.list, (lst, old) => {
@@ -251,7 +238,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
       if (!same) {
         // We want to make sure that our previously sent
         // observers are not going to mess up our list.
-        this.unmountMarkers()
+        o.foreach(child_observables, c => c.stopObservers())
         this.bound_recompute()
       }
 
@@ -262,18 +249,18 @@ export class Grouper<T extends HasLatLng> extends Verb {
     this.observe(this.o_clusters, (clusters, previous) => {
       this.cluster_layer.clearLayers()
 
-      for (let c of clusters) {
+      for (var c of clusters) {
         var ll = this.map.unproject(c, this.zoom_level)
 
         // For clusters, we create an virtual observable that remembers what the original
         // elements indices were and map them back to the original list if they change.
-        let indices = c.points.map(c => c.index)
+        let indices = c.points.map(c => c.index).sort()
+        indices = indices.sort((a, b) => a < b ? -1 : a > b ? 1 : 0) // Keep the original sorting.
         let obs = this.list.arrayTransform(indices)
-        // child_observables.push(obs)
+        child_observables.push(obs)
 
         var eltmarker = multifn(obs, ll)
         var marker = eltmarker instanceof L.Marker ? eltmarker : domMarker(ll, eltmarker)
-        // console.log(marker.getElement())
         this.cluster_layer.addLayer(marker)
       }
     })

@@ -152,10 +152,6 @@ declare module 'elt-leaflet/grouper' {
             inserted(node: Node): void;
             removed(): void;
             /**
-                * Remove all markers from the map.
-                */
-            unmountMarkers(): void;
-            /**
                 *
                 */
             init(): void;
