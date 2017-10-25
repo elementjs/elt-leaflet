@@ -128,6 +128,7 @@ declare module 'elt-leaflet/grouper' {
             zoom_level: number;
             cluster_layer: L.LayerGroup;
             bound_recompute: () => void;
+            child_observables: Observable<any>[];
             lst_x: GroupPoint<T>[];
             lst_y: GroupPoint<T>[];
             o_clusters: Observable<Cluster<T>[]>;

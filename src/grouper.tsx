@@ -69,6 +69,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
 
   cluster_layer: L.LayerGroup = L.layerGroup([])
   bound_recompute: () => void = o.debounce(() => this.recompute(), 1)
+  child_observables: Observable<any>[] = []
 
   lst_x: GroupPoint<T>[] = []
   lst_y: GroupPoint<T>[] = []
@@ -205,6 +206,8 @@ export class Grouper<T extends HasLatLng> extends Verb {
   }
 
   removed() {
+    for (var co of this.child_observables)
+      co.stopObservers()
     this.cluster_layer.remove()
     this.map.off('moveend', this.bound_recompute)
     this.map.off('zoomend', this.bound_recompute)
@@ -218,7 +221,6 @@ export class Grouper<T extends HasLatLng> extends Verb {
     // We have to track the observables we send back to the marker functions,
     // as they may be out of sync with the new list when it changes. When that
     // happens, we just disable them.
-    var child_observables: Observable<any>[] = []
 
     // On observe la liste originale
     this.observe(this.list, (lst, old) => {
@@ -238,7 +240,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
       if (!same) {
         // We want to make sure that our previously sent
         // observers are not going to mess up our list.
-        o.foreach(child_observables, c => c.stopObservers())
+        o.foreach(this.child_observables, c => c.stopObservers())
         this.bound_recompute()
       }
 
@@ -257,7 +259,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
         let indices = c.points.map(c => c.index).sort()
         indices = indices.sort((a, b) => a < b ? -1 : a > b ? 1 : 0) // Keep the original sorting.
         let obs = this.list.arrayTransform(indices)
-        child_observables.push(obs)
+        this.child_observables.push(obs)
 
         var eltmarker = multifn(obs, ll)
         var marker = eltmarker instanceof L.Marker ? eltmarker : domMarker(ll, eltmarker)
