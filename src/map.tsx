@@ -1,18 +1,18 @@
 
 import {
-	ArrayOrSingle,
 	Attrs,
 	Component,
 	Mixin,
 	DisplayIf,
 	getChildren,
 	o,
-	MaybeObservable,
+	O,
 	Observable,
 	observe,
 	inserted,
 	removed,
-	Verb
+	Verb,
+	RO
 } from 'elt'
 
 import * as L from 'leaflet'
@@ -25,8 +25,8 @@ import {domMarker} from './marker'
 
 
 export interface MapAttributes extends Attrs {
-	center?: MaybeObservable<L.LatLng>
-	zoom?: MaybeObservable<number>
+	center?: RO<L.LatLng>
+	zoom?: RO<number>
 	tileLayer: string
 }
 
@@ -34,7 +34,7 @@ export interface MapAttributes extends Attrs {
 /**
  * special foreach function
  */
-function _foreach<T>(ob: ArrayOrSingle<T> | null, callback: (t: T) => any) {
+function _foreach<T>(ob: T | T[] | null | undefined, callback: (t: T) => any) {
 	if (ob == null) return
 	if (Array.isArray(ob))
 		ob.forEach(callback)
@@ -100,7 +100,7 @@ export class Map extends Component {
 				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
 			})
 
-		return <div class='elt-leaflet-map'>{children}</div>
+		return <div class={CSS.map}>{children}</div>
 	}
 
 }
@@ -116,7 +116,7 @@ export class MapCenterVerb extends Verb {
 
 	map: L.Map
 
-	constructor(public center: MaybeObservable<CenterExpression>) {
+	constructor(public center: RO<CenterExpression>) {
 		super()
 	}
 
@@ -144,7 +144,7 @@ export class MapCenterVerb extends Verb {
 
 }
 
-export function CenterMap(center: MaybeObservable<CenterExpression>) {
+export function CenterMap(center: RO<CenterExpression>) {
 	return MapCenterVerb.create(center)
 }
 
@@ -223,7 +223,7 @@ export function WatchMap(callbacks: MapWatcherCallbacks) {
 export class MarkerDisplayer extends Verb {
 	marker: L.Marker
 
-	constructor(public coords: MaybeObservable<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
+	constructor(public coords: RO<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
 		super()
 	}
 
@@ -242,7 +242,7 @@ export class MarkerDisplayer extends Verb {
 }
 
 
-export function DisplayMarker(coords: MaybeObservable<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
+export function DisplayMarker(coords: RO<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
 	return MarkerDisplayer.create(coords, marker, options)
 }
 
@@ -251,7 +251,7 @@ export class LayerDisplayer extends Verb {
 	map: L.Map
 	layer: L.LayerGroup
 
-	constructor(public layers: MaybeObservable<L.Layer[]|L.Layer>) {
+	constructor(public layers: O<L.Layer[]|L.Layer>) {
 		super()
 		this.layer = L.layerGroup([])
 	}
@@ -282,6 +282,16 @@ export class LayerDisplayer extends Verb {
 }
 
 
-export function DisplayLayers(layers: MaybeObservable<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
+export function DisplayLayers(layers: RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
 	return LayerDisplayer.create(layers)
+}
+
+
+import s from 'elt-material/styling'
+
+export namespace CSS {
+	export const map = s.style('map', {
+		background: s.colors.Bg,
+		zIndex: 0
+	})
 }

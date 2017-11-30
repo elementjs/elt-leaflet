@@ -2,7 +2,7 @@
 import {
   Attrs,
   Verb,
-  MaybeObservable,
+  O,
   o,
   Observable,
   Repeat,

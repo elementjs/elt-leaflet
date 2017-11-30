@@ -11,11 +11,11 @@ declare module 'elt-leaflet' {
 }
 
 declare module 'elt-leaflet/map' {
-    import { Attrs, Component, MaybeObservable, Verb } from 'elt';
+    import { Attrs, Component, O, Verb, RO } from 'elt';
     import * as L from 'leaflet';
     export interface MapAttributes extends Attrs {
-        center?: MaybeObservable<L.LatLng>;
-        zoom?: MaybeObservable<number>;
+        center?: RO<L.LatLng>;
+        zoom?: RO<number>;
         tileLayer: string;
     }
     export class Map extends Component {
@@ -29,14 +29,14 @@ declare module 'elt-leaflet/map' {
     }
     export type CenterExpression = L.LatLngExpression | L.LatLngBoundsExpression | null | undefined;
     export class MapCenterVerb extends Verb {
-        center: MaybeObservable<CenterExpression>;
+        center: RO<CenterExpression>;
         map: L.Map;
-        constructor(center: MaybeObservable<CenterExpression>);
+        constructor(center: RO<CenterExpression>);
         init(): void;
         inserted(node: Node): void;
         removed(): void;
     }
-    export function CenterMap(center: MaybeObservable<CenterExpression>): Node;
+    export function CenterMap(center: RO<CenterExpression>): Node;
     export type LeafletCallback<T extends L.LeafletEvent> = (ev: T) => any;
     export interface MapWatcherCallbacks {
         autopanstart?: LeafletCallback<L.LeafletEvent>;
@@ -81,26 +81,29 @@ declare module 'elt-leaflet/map' {
     }
     export function WatchMap(callbacks: MapWatcherCallbacks): Node;
     export class MarkerDisplayer extends Verb {
-        coords: MaybeObservable<L.LatLngExpression>;
+        coords: RO<L.LatLngExpression>;
         dom_marker: Element;
         options: L.MarkerOptions;
         marker: L.Marker;
-        constructor(coords: MaybeObservable<L.LatLngExpression>, dom_marker: Element, options: L.MarkerOptions);
+        constructor(coords: RO<L.LatLngExpression>, dom_marker: Element, options: L.MarkerOptions);
         init(): void;
         inserted(node: Node): void;
         removed(node: Node): void;
     }
-    export function DisplayMarker(coords: MaybeObservable<L.LatLngExpression>, marker: Element, options?: L.MarkerOptions): Node;
+    export function DisplayMarker(coords: RO<L.LatLngExpression>, marker: Element, options?: L.MarkerOptions): Node;
     export class LayerDisplayer extends Verb {
-        layers: MaybeObservable<L.Layer[] | L.Layer>;
+        layers: O<L.Layer[] | L.Layer>;
         map: L.Map;
         layer: L.LayerGroup;
-        constructor(layers: MaybeObservable<L.Layer[] | L.Layer>);
+        constructor(layers: O<L.Layer[] | L.Layer>);
         init(): void;
         inserted(node: Node): void;
         removed(node: Node): void;
     }
-    export function DisplayLayers(layers: MaybeObservable<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;
+    export function DisplayLayers(layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;
+    export namespace CSS {
+        const map: string;
+    }
 }
 
 declare module 'elt-leaflet/grouper' {
