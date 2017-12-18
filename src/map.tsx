@@ -25,7 +25,8 @@ import {domMarker} from './marker'
 
 
 export interface MapAttributes extends Attrs {
-	center?: RO<L.LatLng>
+	center?: RO<L.LatLngExpression | null | undefined>
+	bbox?: RO<L.LatLngBoundsExpression | null | undefined>
 	zoom?: RO<number>
 	tileLayer: string
 }
@@ -60,7 +61,7 @@ export class Map extends Component {
 			zoom: 13,
 			attributionControl: false,
 			// zoom sur le centre de la france.
-			center: [46.48333, 2.53333]
+			center: o.get(this.attrs.center) || [46.48333, 2.53333]
 		})
 
 				// Rajout des tiles OSM
@@ -95,6 +96,12 @@ export class Map extends Component {
 				if (center) this.leafletMap.panTo(center, {animate: true})
 			})
 
+		if (this.attrs.bbox) {
+			this.observe(this.attrs.bbox, bbox => {
+				if (bbox) this.leafletMap.fitBounds(bbox, {animate: true})
+			})
+		}
+
 		if (this.attrs.zoom)
 			this.observe(this.attrs.zoom, zoom => {
 				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
@@ -109,44 +116,44 @@ export class Map extends Component {
 
 //////////////////////////////////////////////////////////////////////////
 
-export type CenterExpression = L.LatLngExpression | L.LatLngBoundsExpression | null | undefined
+// export type CenterExpression = L.LatLngExpression | L.LatLngBoundsExpression | null | undefined
 
 
-export class MapCenterVerb extends Verb {
+// export class MapCenterVerb extends Verb {
 
-	map: L.Map
+// 	map: L.Map
 
-	constructor(public center: RO<CenterExpression>) {
-		super()
-	}
+// 	constructor(public center: RO<CenterExpression>) {
+// 		super()
+// 	}
 
-	init() {
-		this.observe(this.center, center => {
-			if (center) {
-				if (center instanceof L.LatLng) {
-					this.map.setView(center as L.LatLngExpression, this.map.getZoom())
-				} else {
-					this.map.fitBounds(center as L.LatLngBoundsExpression, {
-						animate: true, padding: [150, 150]
-					})
-				}
-			}
-		})
-	}
+// 	init() {
+// 		this.observe(this.center, center => {
+// 			if (center) {
+// 				if (center instanceof L.LatLng) {
+// 					this.map.setView(center as L.LatLngExpression, this.map.getZoom())
+// 				} else {
+// 					this.map.fitBounds(center as L.LatLngBoundsExpression, {
+// 						animate: true, padding: [150, 150]
+// 					})
+// 				}
+// 			}
+// 		})
+// 	}
 
-	inserted(node: Node) {
-		this.map = Map.get(node)!.leafletMap
-	}
+// 	inserted(node: Node) {
+// 		this.map = Map.get(node)!.leafletMap
+// 	}
 
-	removed() {
-		this.map = null!
-	}
+// 	removed() {
+// 		this.map = null!
+// 	}
 
-}
+// }
 
-export function CenterMap(center: RO<CenterExpression>) {
-	return MapCenterVerb.create(center)
-}
+// export function CenterMap(center: RO<CenterExpression>) {
+// 	return MapCenterVerb.create(center)
+// }
 
 
 

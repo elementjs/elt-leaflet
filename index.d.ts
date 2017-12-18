@@ -14,7 +14,8 @@ declare module 'elt-leaflet/map' {
     import { Attrs, Component, O, Verb, RO } from 'elt';
     import * as L from 'leaflet';
     export interface MapAttributes extends Attrs {
-        center?: RO<L.LatLng>;
+        center?: RO<L.LatLngExpression | null | undefined>;
+        bbox?: RO<L.LatLngBoundsExpression | null | undefined>;
         zoom?: RO<number>;
         tileLayer: string;
     }
@@ -27,16 +28,6 @@ declare module 'elt-leaflet/map' {
         addLayer(layer: L.Layer): void;
         render(children: DocumentFragment): Element;
     }
-    export type CenterExpression = L.LatLngExpression | L.LatLngBoundsExpression | null | undefined;
-    export class MapCenterVerb extends Verb {
-        center: RO<CenterExpression>;
-        map: L.Map;
-        constructor(center: RO<CenterExpression>);
-        init(): void;
-        inserted(node: Node): void;
-        removed(): void;
-    }
-    export function CenterMap(center: RO<CenterExpression>): Node;
     export type LeafletCallback<T extends L.LeafletEvent> = (ev: T) => any;
     export interface MapWatcherCallbacks {
         autopanstart?: LeafletCallback<L.LeafletEvent>;
@@ -123,7 +114,8 @@ declare module 'elt-leaflet/grouper' {
             points: GroupPoint<T>[];
     }
     export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker);
-    export class Grouper<T extends HasLatLng> extends Verb {
+    export class Grouper<T> extends Verb {
+            extractor: (a: T) => L.LatLng;
             list: Observable<T[]>;
             multi: GrouperCallbackMulti<T>;
             epsilon: number;
@@ -135,7 +127,7 @@ declare module 'elt-leaflet/grouper' {
             lst_x: GroupPoint<T>[];
             lst_y: GroupPoint<T>[];
             o_clusters: Observable<Cluster<T>[]>;
-            constructor(list: Observable<T[]>, multi: GrouperCallbackMulti<T>, epsilon?: number);
+            constructor(extractor: (a: T) => L.LatLng, list: Observable<T[]>, multi: GrouperCallbackMulti<T>, epsilon?: number);
             /**
                 *
                 * @param point
@@ -160,9 +152,6 @@ declare module 'elt-leaflet/grouper' {
                 */
             init(): void;
     }
-    export interface HasLatLng {
-            latlng(): L.LatLng;
-    }
     /**
         *
         * @param items La liste d'items que l'on va vouloir regrouper
@@ -170,7 +159,7 @@ declare module 'elt-leaflet/grouper' {
         * @param multi L'affichage d'une liste d'items sur les mêmes coordonnées
         * @param regrouped L'affichage de plusieurs points regroupés par distance
         */
-    export function GeoGroup<T extends HasLatLng>(items: Observable<T[]>, multi: GrouperCallbackMulti<T>, options?: {
+    export function GeoGroup<T>(extractor: (a: T) => L.LatLng, items: Observable<T[]>, multi: GrouperCallbackMulti<T>, options?: {
             epsilon: number;
     }): Node;
 }

@@ -62,7 +62,7 @@ function _for<T>(start: number, dir: number, lst: GroupPoint<T>[], fn: (p: Group
 export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker)
 
 
-export class Grouper<T extends HasLatLng> extends Verb {
+export class Grouper<T> extends Verb {
 
   map: L.Map
   zoom_level: number
@@ -77,6 +77,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
   o_clusters: Observable<Cluster<T>[]> = o([])
 
   constructor(
+    public extractor: (a: T) => L.LatLng,
     public list: Observable<T[]>,
     public multi: GrouperCallbackMulti<T>,
     public epsilon: number = 35
@@ -144,7 +145,7 @@ export class Grouper<T extends HasLatLng> extends Verb {
 
     for (var i = 0; i < lst.length; i++) {
       var item = lst[i]
-      var ll = item.latlng()
+      var ll = this.extractor(item)
       if (!ll || !bounds.contains(ll)) continue
       var point = this.map.project(ll, zoom_level) as GroupPoint<T>
 
@@ -223,14 +224,15 @@ export class Grouper<T extends HasLatLng> extends Verb {
     // happens, we just disable them.
 
     // On observe la liste originale
-    this.observe(this.list, (lst, old) => {
+    this.observe(this.list, (lst, chg) => {
 
-      var same = old && lst.length === old.length
-      if (old && lst.length === old.length) {
+      var same = !chg.changed(l => l.length)
+      if (same) {
         var different = false
+        const old = chg.oldValue()
         for (var i = 0; i < lst.length; i++) {
-          if (!lst[i].latlng()) continue
-          if (!lst[i].latlng().equals(old[i].latlng())) {
+          if (!this.extractor(lst[i])) continue
+          if (!this.extractor(lst[i]).equals(this.extractor(old[i]))) {
             same = false
             break
           }
@@ -272,11 +274,6 @@ export class Grouper<T extends HasLatLng> extends Verb {
 }
 
 
-export interface HasLatLng {
-  latlng(): L.LatLng
-}
-
-
 /**
  *
  * @param items La liste d'items que l'on va vouloir regrouper
@@ -284,7 +281,8 @@ export interface HasLatLng {
  * @param multi L'affichage d'une liste d'items sur les mêmes coordonnées
  * @param regrouped L'affichage de plusieurs points regroupés par distance
  */
-export function GeoGroup<T extends HasLatLng>(
+export function GeoGroup<T>(
+  extractor: (a: T) => L.LatLng,
   items: Observable<T[]>,
   multi: GrouperCallbackMulti<T>,
   options = {
@@ -293,5 +291,5 @@ export function GeoGroup<T extends HasLatLng>(
     epsilon: 35
   }
 ): Node {
-  return Grouper.create(items, multi, options.epsilon)
+  return Grouper.create(extractor, items, multi, options.epsilon)
 }
