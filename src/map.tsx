@@ -6,13 +6,13 @@ import {
 	DisplayIf,
 	getChildren,
 	o,
-	O,
+	RO,
 	Observable,
 	observe,
 	inserted,
 	removed,
 	Verb,
-	RO
+	O
 } from 'elt'
 
 import * as L from 'leaflet'
@@ -25,8 +25,8 @@ import {domMarker} from './marker'
 
 
 export interface MapAttributes extends Attrs {
-	center?: RO<L.LatLngExpression | null | undefined>
-	bbox?: RO<L.LatLngBoundsExpression | null | undefined>
+	center?: O<L.LatLng>
+	bbox?: O<L.LatLngBounds>
 	zoom?: RO<number>
 	tileLayer: string
 }
@@ -47,6 +47,7 @@ function _foreach<T>(ob: T | T[] | null | undefined, callback: (t: T) => any) {
 export class Map extends Component {
 
 	attrs: MapAttributes
+	private from_event = false
 	private l: L.Map | null
 
 	get leafletMap(): L.Map {
@@ -68,6 +69,26 @@ export class Map extends Component {
     L.tileLayer(this.attrs.tileLayer, {
 			// subdomains: TILE_SUBDOMAINS
     }).addTo(this.l);
+
+		const upd = o.debounce(() => {
+			this.from_event = true
+			const center = o.get(this.attrs.center)
+			const mapcenter = map.getCenter()
+			if (this.attrs.center instanceof Observable && (!center || !mapcenter.equals(center))) {
+				this.attrs.center.set(mapcenter)
+			}
+
+			const bbox = o.get(this.attrs.bbox)
+			const mapbbox = map.getBounds()
+			if (this.attrs.bbox instanceof Observable && (!bbox || !mapbbox.equals(bbox))) {
+				console.log(mapbbox)
+				this.attrs.bbox.set(mapbbox)
+			}
+			this.from_event = false
+		}, 100)
+
+		map.on('moveend', upd)
+		map.on('zoomend', upd)
 
 		requestAnimationFrame(() => map.invalidateSize({}))
 	}
@@ -93,12 +114,17 @@ export class Map extends Component {
 
 		if (this.attrs.center)
 			this.observe(this.attrs.center, center => {
-				if (center) this.leafletMap.panTo(center, {animate: true})
+				if (this.from_event) return
+				if (center && !this.leafletMap.getCenter().equals(center)) {
+					this.leafletMap.panTo(center, {animate: true})
+				}
 			})
 
 		if (this.attrs.bbox) {
 			this.observe(this.attrs.bbox, bbox => {
-				if (bbox) this.leafletMap.fitBounds(bbox, {animate: true})
+				if (this.from_event) return
+				if (bbox && !this.leafletMap.getBounds().equals(bbox))
+					this.leafletMap.fitBounds(bbox, {animate: true})
 			})
 		}
 
@@ -113,47 +139,6 @@ export class Map extends Component {
 }
 
 
-
-//////////////////////////////////////////////////////////////////////////
-
-// export type CenterExpression = L.LatLngExpression | L.LatLngBoundsExpression | null | undefined
-
-
-// export class MapCenterVerb extends Verb {
-
-// 	map: L.Map
-
-// 	constructor(public center: RO<CenterExpression>) {
-// 		super()
-// 	}
-
-// 	init() {
-// 		this.observe(this.center, center => {
-// 			if (center) {
-// 				if (center instanceof L.LatLng) {
-// 					this.map.setView(center as L.LatLngExpression, this.map.getZoom())
-// 				} else {
-// 					this.map.fitBounds(center as L.LatLngBoundsExpression, {
-// 						animate: true, padding: [150, 150]
-// 					})
-// 				}
-// 			}
-// 		})
-// 	}
-
-// 	inserted(node: Node) {
-// 		this.map = Map.get(node)!.leafletMap
-// 	}
-
-// 	removed() {
-// 		this.map = null!
-// 	}
-
-// }
-
-// export function CenterMap(center: RO<CenterExpression>) {
-// 	return MapCenterVerb.create(center)
-// }
 
 
 

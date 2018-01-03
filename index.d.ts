@@ -11,11 +11,11 @@ declare module 'elt-leaflet' {
 }
 
 declare module 'elt-leaflet/map' {
-    import { Attrs, Component, O, Verb, RO } from 'elt';
+    import { Attrs, Component, RO, Verb, O } from 'elt';
     import * as L from 'leaflet';
     export interface MapAttributes extends Attrs {
-        center?: RO<L.LatLngExpression | null | undefined>;
-        bbox?: RO<L.LatLngBoundsExpression | null | undefined>;
+        center?: O<L.LatLng>;
+        bbox?: O<L.LatLngBounds>;
         zoom?: RO<number>;
         tileLayer: string;
     }
