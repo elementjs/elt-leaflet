@@ -81,7 +81,6 @@ export class Map extends Component {
 			const bbox = o.get(this.attrs.bbox)
 			const mapbbox = map.getBounds()
 			if (this.attrs.bbox instanceof Observable && (!bbox || !mapbbox.equals(bbox))) {
-				console.log(mapbbox)
 				this.attrs.bbox.set(mapbbox)
 			}
 			this.from_event = false
