@@ -16,6 +16,8 @@ declare module 'elt-leaflet/map' {
     export interface MapAttributes extends Attrs {
         center?: O<L.LatLng>;
         bbox?: O<L.LatLngBounds>;
+        'center-ro'?: RO<L.LatLng | null>;
+        'bbox-ro'?: RO<L.LatLngBounds | null>;
         zoom?: RO<number>;
         tileLayer: string;
     }

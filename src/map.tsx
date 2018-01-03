@@ -27,6 +27,8 @@ import {domMarker} from './marker'
 export interface MapAttributes extends Attrs {
 	center?: O<L.LatLng>
 	bbox?: O<L.LatLngBounds>
+	'center-ro'?: RO<L.LatLng | null>
+	'bbox-ro'?: RO<L.LatLngBounds | null>
 	zoom?: RO<number>
 	tileLayer: string
 }
@@ -119,8 +121,25 @@ export class Map extends Component {
 				}
 			})
 
+		if (this.attrs['center-ro'])
+			this.observe(this.attrs['center-ro']!, center => {
+				if (this.from_event) return
+				if (center && !this.leafletMap.getCenter().equals(center)) {
+					this.leafletMap.panTo(center, {animate: true})
+				}
+			})
+
+
 		if (this.attrs.bbox) {
 			this.observe(this.attrs.bbox, bbox => {
+				if (this.from_event) return
+				if (bbox && !this.leafletMap.getBounds().equals(bbox))
+					this.leafletMap.fitBounds(bbox, {animate: true})
+			})
+		}
+
+		if (this.attrs['bbox-ro']) {
+			this.observe(this.attrs['bbox-ro']!, bbox => {
 				if (this.from_event) return
 				if (bbox && !this.leafletMap.getBounds().equals(bbox))
 					this.leafletMap.fitBounds(bbox, {animate: true})
