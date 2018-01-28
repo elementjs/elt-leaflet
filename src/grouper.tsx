@@ -6,8 +6,7 @@ import {
   o,
   Observable,
   Repeat,
-  ArrayTransformObservable,
-  _unmount
+  ArrayTransformObservable
 } from 'elt'
 
 import {Map} from './map'

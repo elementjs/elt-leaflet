@@ -1,6 +1,6 @@
 
 import * as L from 'leaflet'
-import {_unmount} from 'elt'
+import {mount, unmount} from 'elt'
 
 export interface DOMIconOptions extends L.DivIconOptions {
 	node: Element
@@ -15,12 +15,18 @@ export const DOMIcon = L.Icon.extend({
 
 export function domMarker(ll: L.LatLngExpression, icon: Element, options: L.MarkerOptions = {}): L.Marker {
 	const di = new DOMIcon({node: icon})
-  options.icon = di
-	var marker = L.marker(ll, options)
-	marker.on('remove', function (this: L.Marker, ev) {
-		const node = (this.options.icon!.options as any).node as Node
+	const node = di.options.node as Node
+	options.icon = di
 
-		_unmount(node, node.parentNode!, node.previousSibling, node.nextSibling)
+	var marker = L.marker(ll, options)
+
+	marker.on('remove', function (this: L.Marker, ev) {
+		unmount(node, node.parentNode!, node.previousSibling, node.nextSibling)
 	})
+
+	marker.on('add', function () {
+		mount(node, node.parentNode!)
+	})
+
   return marker
 }
