@@ -7,6 +7,7 @@
         "sourceMap": true,
 	"strictNullChecks": true,
 	"noImplicitThis": true,
+  "noStrictGenericChecks": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
         "experimentalDecorators": true,
