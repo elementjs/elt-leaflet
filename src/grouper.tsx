@@ -284,6 +284,16 @@ export function GeoGroup<T>(
   extractor: (a: T) => L.LatLng,
   items: Observable<T[]>,
   multi: GrouperCallbackMulti<T>,
+  options?: {
+    // Tous les points à moins de 15 pixels de distance les uns des autres
+    //
+    epsilon: number
+  }
+): Node
+ export function GeoGroup<T>(
+  extractor: (a: any) => L.LatLng,
+  items: Observable<T[]>,
+  multi: GrouperCallbackMulti<T>,
   options = {
     // Tous les points à moins de 15 pixels de distance les uns des autres
     //
