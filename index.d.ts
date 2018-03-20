@@ -95,7 +95,7 @@ declare module 'elt-leaflet/map' {
     }
     export function DisplayLayers(layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;
     export namespace CSS {
-        const map: string;
+        const map: any;
     }
 }
 
