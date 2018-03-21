@@ -297,11 +297,11 @@ export function DisplayLayers(layers: RO<null|undefined|L.Layer|(null|undefined|
 }
 
 
-import s from 'elt-material/styling'
+import {css as mc} from 'elt-material'
 
 export namespace CSS {
-	export const map = s.style('map', {
-		background: s.colors.Bg,
+	export const map = mc.cls('map', {
+		background: mc.colors.BG,
 		zIndex: 0
 	})
 }
