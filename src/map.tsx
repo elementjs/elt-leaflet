@@ -11,7 +11,7 @@ import {
 	observe,
 	inserted,
 	removed,
-	Verb,
+	instanciate_verb,
 	O
 } from 'elt'
 
@@ -151,9 +151,17 @@ export class Map extends Component {
 				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
 			})
 
-		return <div class={CSS.map}>{children}</div>
+		return <div class={Map.cls_container}>{children}</div>
 	}
 
+}
+
+
+export namespace Map {
+	export const cls_container = cls('map', {
+		background: Styling.colors.BG,
+		zIndex: 0
+	})
 }
 
 
@@ -199,7 +207,7 @@ export interface MapWatcherCallbacks {
 }
 
 
-export class MapWatcher extends Verb {
+export class MapWatcher extends Mixin<Comment> {
 
 	leaflet_map: L.Map | null
 
@@ -226,11 +234,11 @@ export class MapWatcher extends Verb {
 }
 
 export function WatchMap(callbacks: MapWatcherCallbacks) {
-	return MapWatcher.create(callbacks)
+	return instanciate_verb(new MapWatcher(callbacks))
 }
 
 
-export class MarkerDisplayer extends Verb {
+export class MarkerDisplayer extends Mixin<Comment> {
 	marker: L.Marker
 
 	constructor(public coords: RO<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
@@ -253,15 +261,15 @@ export class MarkerDisplayer extends Verb {
 
 
 export function DisplayMarker(coords: RO<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
-	return MarkerDisplayer.create(coords, marker, options)
+	return instanciate_verb(new MarkerDisplayer(coords, marker, options))
 }
 
 
-export class LayerDisplayer extends Verb {
+export class LayerDisplayer extends Mixin<Comment> {
 	map: L.Map
 	layer: L.LayerGroup
 
-	constructor(public layers: O<L.Layer[]|L.Layer>) {
+	constructor(public layers: RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
 		super()
 		this.layer = L.layerGroup([])
 	}
@@ -275,8 +283,9 @@ export class LayerDisplayer extends Verb {
 
 			for (var l of this.layer.getLayers())
 				l.remove()
-			for (l of layers)
-				if (l) this.layer.addLayer(l)
+
+			for (var l2 of layers)
+				if (l2) this.layer.addLayer(l2)
 		})
 	}
 
@@ -293,15 +302,9 @@ export class LayerDisplayer extends Verb {
 
 
 export function DisplayLayers(layers: RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
-	return LayerDisplayer.create(layers)
+	return instanciate_verb(new LayerDisplayer(layers))
 }
 
 
-import {css as mc} from 'elt-material'
-
-export namespace CSS {
-	export const map = mc.cls('map', {
-		background: mc.colors.BG,
-		zIndex: 0
-	})
-}
+import { cls } from 'osun'
+import { Styling } from 'elt-material'

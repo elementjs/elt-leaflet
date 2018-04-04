@@ -1,7 +1,8 @@
 
 import {
   Attrs,
-  Verb,
+  Mixin,
+  instanciate_verb,
   O,
   o,
   Observable,
@@ -61,7 +62,7 @@ function _for<T>(start: number, dir: number, lst: GroupPoint<T>[], fn: (p: Group
 export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker)
 
 
-export class Grouper<T> extends Verb {
+export class Grouper<T> extends Mixin<Comment> {
 
   map: L.Map
   zoom_level: number
@@ -300,5 +301,5 @@ export function GeoGroup<T>(
     epsilon: 35
   }
 ): Node {
-  return Grouper.create(extractor, items, multi, options.epsilon)
+  return instanciate_verb(new Grouper(extractor, items, multi, options.epsilon))
 }

@@ -11,7 +11,7 @@ declare module 'elt-leaflet' {
 }
 
 declare module 'elt-leaflet/map' {
-    import { Attrs, Component, RO, Verb, O } from 'elt';
+    import { Attrs, Component, Mixin, RO, O } from 'elt';
     import * as L from 'leaflet';
     export interface MapAttributes extends Attrs {
         center?: O<L.LatLng>;
@@ -29,6 +29,9 @@ declare module 'elt-leaflet/map' {
         panTo(ll: L.LatLng): void;
         addLayer(layer: L.Layer): void;
         render(children: DocumentFragment): Element;
+    }
+    export namespace Map {
+        const cls_container: string;
     }
     export type LeafletCallback<T extends L.LeafletEvent> = (ev: T) => any;
     export interface MapWatcherCallbacks {
@@ -65,7 +68,7 @@ declare module 'elt-leaflet/map' {
         zoomlevelschange?: LeafletCallback<L.LeafletEvent>;
         zoomstart?: LeafletCallback<L.LeafletEvent>;
     }
-    export class MapWatcher extends Verb {
+    export class MapWatcher extends Mixin<Comment> {
         callbacks: MapWatcherCallbacks;
         leaflet_map: L.Map | null;
         constructor(callbacks: MapWatcherCallbacks);
@@ -73,7 +76,7 @@ declare module 'elt-leaflet/map' {
         removed(): void;
     }
     export function WatchMap(callbacks: MapWatcherCallbacks): Node;
-    export class MarkerDisplayer extends Verb {
+    export class MarkerDisplayer extends Mixin<Comment> {
         coords: RO<L.LatLngExpression>;
         dom_marker: Element;
         options: L.MarkerOptions;
@@ -84,23 +87,20 @@ declare module 'elt-leaflet/map' {
         removed(node: Node): void;
     }
     export function DisplayMarker(coords: RO<L.LatLngExpression>, marker: Element, options?: L.MarkerOptions): Node;
-    export class LayerDisplayer extends Verb {
-        layers: O<L.Layer[] | L.Layer>;
+    export class LayerDisplayer extends Mixin<Comment> {
+        layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>;
         map: L.Map;
         layer: L.LayerGroup;
-        constructor(layers: O<L.Layer[] | L.Layer>);
+        constructor(layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>);
         init(): void;
         inserted(node: Node): void;
         removed(node: Node): void;
     }
     export function DisplayLayers(layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;
-    export namespace CSS {
-        const map: any;
-    }
 }
 
 declare module 'elt-leaflet/grouper' {
-    import { Verb, Observable, ArrayTransformObservable } from 'elt';
+    import { Mixin, Observable, ArrayTransformObservable } from 'elt';
     import * as L from 'leaflet';
     export interface GroupPoint<T> extends L.Point {
             x: number;
@@ -116,7 +116,7 @@ declare module 'elt-leaflet/grouper' {
             points: GroupPoint<T>[];
     }
     export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker);
-    export class Grouper<T> extends Verb {
+    export class Grouper<T> extends Mixin<Comment> {
             extractor: (a: T) => L.LatLng;
             list: Observable<T[]>;
             multi: GrouperCallbackMulti<T>;
