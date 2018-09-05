@@ -17,6 +17,8 @@ import {
 
 import * as L from 'leaflet'
 
+import { cls } from 'osun'
+import { Styling } from 'elt-material'
 
 import {domMarker} from './marker'
 
@@ -306,5 +308,3 @@ export function DisplayLayers(layers: RO<null|undefined|L.Layer|(null|undefined|
 }
 
 
-import { cls } from 'osun'
-import { Styling } from 'elt-material'
