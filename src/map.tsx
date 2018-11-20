@@ -6,19 +6,16 @@ import {
 	DisplayIf,
 	getChildren,
 	o,
-	RO,
-	Observable,
 	observe,
 	inserted,
 	removed,
 	instanciate_verb,
-	O
 } from 'elt'
 
 import * as L from 'leaflet'
 
 import { cls } from 'osun'
-import { Styling } from 'elt-material'
+import { Styling } from 'elt-ui'
 
 import {domMarker} from './marker'
 
@@ -27,11 +24,11 @@ import {domMarker} from './marker'
 
 
 export interface MapAttributes extends Attrs {
-	center?: O<L.LatLng>
-	bbox?: O<L.LatLngBounds>
-	'center-ro'?: RO<L.LatLng | null>
-	'bbox-ro'?: RO<L.LatLngBounds | null>
-	zoom?: RO<number>
+	center?: o.O<L.LatLng>
+	bbox?: o.O<L.LatLngBounds>
+	'center-ro'?: o.RO<L.LatLng | null>
+	'bbox-ro'?: o.RO<L.LatLngBounds | null>
+	zoom?: o.RO<number>
 	tileLayer: string
 }
 
@@ -78,13 +75,13 @@ export class Map extends Component {
 			this.from_event = true
 			const center = o.get(this.attrs.center)
 			const mapcenter = map.getCenter()
-			if (this.attrs.center instanceof Observable && (!center || !mapcenter.equals(center))) {
+			if (this.attrs.center instanceof o.Observable && (!center || !mapcenter.equals(center))) {
 				this.attrs.center.set(mapcenter)
 			}
 
 			const bbox = o.get(this.attrs.bbox)
 			const mapbbox = map.getBounds()
-			if (this.attrs.bbox instanceof Observable && (!bbox || !mapbbox.equals(bbox))) {
+			if (this.attrs.bbox instanceof o.Observable && (!bbox || !mapbbox.equals(bbox))) {
 				this.attrs.bbox.set(mapbbox)
 			}
 			this.from_event = false
@@ -243,7 +240,7 @@ export function WatchMap(callbacks: MapWatcherCallbacks) {
 export class MarkerDisplayer extends Mixin<Comment> {
 	marker: L.Marker
 
-	constructor(public coords: RO<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
+	constructor(public coords: o.RO<L.LatLngExpression>, public dom_marker: Element, public options: L.MarkerOptions) {
 		super()
 	}
 
@@ -262,7 +259,7 @@ export class MarkerDisplayer extends Mixin<Comment> {
 }
 
 
-export function DisplayMarker(coords: RO<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
+export function DisplayMarker(coords: o.RO<L.LatLngExpression>, marker: Element, options: L.MarkerOptions = {}) {
 	return instanciate_verb(new MarkerDisplayer(coords, marker, options))
 }
 
@@ -271,7 +268,7 @@ export class LayerDisplayer extends Mixin<Comment> {
 	map: L.Map
 	layer: L.LayerGroup
 
-	constructor(public layers: RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
+	constructor(public layers: o.RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
 		super()
 		this.layer = L.layerGroup([])
 	}
@@ -303,7 +300,7 @@ export class LayerDisplayer extends Mixin<Comment> {
 }
 
 
-export function DisplayLayers(layers: RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
+export function DisplayLayers(layers: o.RO<null|undefined|L.Layer|(null|undefined|L.Layer)[]>) {
 	return instanciate_verb(new LayerDisplayer(layers))
 }
 

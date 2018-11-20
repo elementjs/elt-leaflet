@@ -11,14 +11,14 @@ declare module 'elt-leaflet' {
 }
 
 declare module 'elt-leaflet/map' {
-    import { Attrs, Component, Mixin, RO, O } from 'elt';
+    import { Attrs, Component, Mixin, o } from 'elt';
     import * as L from 'leaflet';
     export interface MapAttributes extends Attrs {
-        center?: O<L.LatLng>;
-        bbox?: O<L.LatLngBounds>;
-        'center-ro'?: RO<L.LatLng | null>;
-        'bbox-ro'?: RO<L.LatLngBounds | null>;
-        zoom?: RO<number>;
+        center?: o.O<L.LatLng>;
+        bbox?: o.O<L.LatLngBounds>;
+        'center-ro'?: o.RO<L.LatLng | null>;
+        'bbox-ro'?: o.RO<L.LatLngBounds | null>;
+        zoom?: o.RO<number>;
         tileLayer: string;
     }
     export class Map extends Component {
@@ -77,30 +77,30 @@ declare module 'elt-leaflet/map' {
     }
     export function WatchMap(callbacks: MapWatcherCallbacks): Node;
     export class MarkerDisplayer extends Mixin<Comment> {
-        coords: RO<L.LatLngExpression>;
+        coords: o.RO<L.LatLngExpression>;
         dom_marker: Element;
         options: L.MarkerOptions;
         marker: L.Marker;
-        constructor(coords: RO<L.LatLngExpression>, dom_marker: Element, options: L.MarkerOptions);
+        constructor(coords: o.RO<L.LatLngExpression>, dom_marker: Element, options: L.MarkerOptions);
         init(): void;
         inserted(node: Node): void;
         removed(node: Node): void;
     }
-    export function DisplayMarker(coords: RO<L.LatLngExpression>, marker: Element, options?: L.MarkerOptions): Node;
+    export function DisplayMarker(coords: o.RO<L.LatLngExpression>, marker: Element, options?: L.MarkerOptions): Node;
     export class LayerDisplayer extends Mixin<Comment> {
-        layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>;
+        layers: o.RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>;
         map: L.Map;
         layer: L.LayerGroup;
-        constructor(layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>);
+        constructor(layers: o.RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>);
         init(): void;
         inserted(node: Node): void;
         removed(node: Node): void;
     }
-    export function DisplayLayers(layers: RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;
+    export function DisplayLayers(layers: o.RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;
 }
 
 declare module 'elt-leaflet/grouper' {
-    import { Mixin, Observable, ArrayTransformObservable } from 'elt';
+    import { Mixin, o } from 'elt';
     import * as L from 'leaflet';
     export interface GroupPoint<T> extends L.Point {
             x: number;
@@ -115,21 +115,21 @@ declare module 'elt-leaflet/grouper' {
             y: number;
             points: GroupPoint<T>[];
     }
-    export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker);
+    export type GrouperCallbackMulti<T> = (item: o.ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker);
     export class Grouper<T> extends Mixin<Comment> {
             extractor: (a: T) => L.LatLng;
-            list: Observable<T[]>;
+            list: o.Observable<T[]>;
             multi: GrouperCallbackMulti<T>;
             epsilon: number;
             map: L.Map;
             zoom_level: number;
             cluster_layer: L.LayerGroup;
             bound_recompute: () => void;
-            child_observables: Observable<any>[];
+            child_observables: o.Observable<any>[];
             lst_x: GroupPoint<T>[];
             lst_y: GroupPoint<T>[];
-            o_clusters: Observable<Cluster<T>[]>;
-            constructor(extractor: (a: T) => L.LatLng, list: Observable<T[]>, multi: GrouperCallbackMulti<T>, epsilon?: number);
+            o_clusters: o.Observable<Cluster<T>[]>;
+            constructor(extractor: (a: T) => L.LatLng, list: o.Observable<T[]>, multi: GrouperCallbackMulti<T>, epsilon?: number);
             /**
                 *
                 * @param point
@@ -161,7 +161,7 @@ declare module 'elt-leaflet/grouper' {
         * @param multi L'affichage d'une liste d'items sur les mêmes coordonnées
         * @param regrouped L'affichage de plusieurs points regroupés par distance
         */
-    export function GeoGroup<T>(extractor: (a: T) => L.LatLng, items: Observable<T[]>, multi: GrouperCallbackMulti<T>, options?: {
+    export function GeoGroup<T>(extractor: (a: T) => L.LatLng, items: o.Observable<T[]>, multi: GrouperCallbackMulti<T>, options?: {
             epsilon: number;
     }): Node;
 }

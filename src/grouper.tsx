@@ -3,11 +3,8 @@ import {
   Attrs,
   Mixin,
   instanciate_verb,
-  O,
   o,
-  Observable,
   Repeat,
-  ArrayTransformObservable
 } from 'elt'
 
 import {Map} from './map'
@@ -59,7 +56,7 @@ function _for<T>(start: number, dir: number, lst: GroupPoint<T>[], fn: (p: Group
 
 
 
-export type GrouperCallbackMulti<T> = (item: ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker)
+export type GrouperCallbackMulti<T> = (item: o.ArrayTransformObservable<T>, latlng: L.LatLng) => (Element | L.Marker)
 
 
 export class Grouper<T> extends Mixin<Comment> {
@@ -69,16 +66,16 @@ export class Grouper<T> extends Mixin<Comment> {
 
   cluster_layer: L.LayerGroup = L.layerGroup([])
   bound_recompute: () => void = o.debounce(() => this.recompute(), 1)
-  child_observables: Observable<any>[] = []
+  child_observables: o.Observable<any>[] = []
 
   lst_x: GroupPoint<T>[] = []
   lst_y: GroupPoint<T>[] = []
 
-  o_clusters: Observable<Cluster<T>[]> = o([])
+  o_clusters: o.Observable<Cluster<T>[]> = o([])
 
   constructor(
     public extractor: (a: T) => L.LatLng,
-    public list: Observable<T[]>,
+    public list: o.Observable<T[]>,
     public multi: GrouperCallbackMulti<T>,
     public epsilon: number = 35
   ) {
@@ -283,7 +280,7 @@ export class Grouper<T> extends Mixin<Comment> {
  */
 export function GeoGroup<T>(
   extractor: (a: T) => L.LatLng,
-  items: Observable<T[]>,
+  items: o.Observable<T[]>,
   multi: GrouperCallbackMulti<T>,
   options?: {
     // Tous les points à moins de 15 pixels de distance les uns des autres
@@ -293,7 +290,7 @@ export function GeoGroup<T>(
 ): Node
  export function GeoGroup<T>(
   extractor: (a: any) => L.LatLng,
-  items: Observable<T[]>,
+  items: o.Observable<T[]>,
   multi: GrouperCallbackMulti<T>,
   options = {
     // Tous les points à moins de 15 pixels de distance les uns des autres
