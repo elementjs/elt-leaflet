@@ -221,7 +221,7 @@ export class Grouper<T> extends Mixin<Comment> {
     // happens, we just disable them.
 
     // On observe la liste originale
-    this.observe(this.list, (lst, chg) => {
+    this.observers.observe(this.list, (lst, chg) => {
 
       var same = !chg.changed(l => l.length)
       if (same) {
@@ -247,7 +247,7 @@ export class Grouper<T> extends Mixin<Comment> {
 
     var multifn = this.multi
 
-    this.observe(this.o_clusters, (clusters, previous) => {
+    this.observers.observe(this.o_clusters, (clusters, previous) => {
       this.cluster_layer.clearLayers()
 
       for (var c of clusters) {

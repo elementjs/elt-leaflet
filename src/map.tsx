@@ -113,7 +113,7 @@ export class Map extends Component {
 	render(children: DocumentFragment) {
 
 		if (this.attrs.center)
-			this.observe(this.attrs.center, center => {
+			this.observers.observe(this.attrs.center, center => {
 				if (this.from_event) return
 				if (center && !this.leafletMap.getCenter().equals(center)) {
 					this.leafletMap.panTo(center, {animate: true})
@@ -121,7 +121,7 @@ export class Map extends Component {
 			})
 
 		if (this.attrs['center-ro'])
-			this.observe(this.attrs['center-ro']!, center => {
+			this.observers.observe(this.attrs['center-ro']!, center => {
 				if (this.from_event) return
 				if (center && !this.leafletMap.getCenter().equals(center)) {
 					this.leafletMap.panTo(center, {animate: true})
@@ -130,7 +130,7 @@ export class Map extends Component {
 
 
 		if (this.attrs.bbox) {
-			this.observe(this.attrs.bbox, bbox => {
+			this.observers.observe(this.attrs.bbox, bbox => {
 				if (this.from_event) return
 				if (bbox && !this.leafletMap.getBounds().equals(bbox))
 					this.leafletMap.fitBounds(bbox, {animate: true})
@@ -138,7 +138,7 @@ export class Map extends Component {
 		}
 
 		if (this.attrs['bbox-ro']) {
-			this.observe(this.attrs['bbox-ro']!, bbox => {
+			this.observers.observe(this.attrs['bbox-ro']!, bbox => {
 				if (this.from_event) return
 				if (bbox && !this.leafletMap.getBounds().equals(bbox))
 					this.leafletMap.fitBounds(bbox, {animate: true})
@@ -146,7 +146,7 @@ export class Map extends Component {
 		}
 
 		if (this.attrs.zoom)
-			this.observe(this.attrs.zoom, zoom => {
+			this.observers.observe(this.attrs.zoom, zoom => {
 				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
 			})
 
@@ -246,7 +246,7 @@ export class MarkerDisplayer extends Mixin<Comment> {
 
 	init() {
 		this.marker = domMarker(o.get(this.coords), this.dom_marker, this.options)
-		this.observe(this.coords, co => this.marker.setLatLng(co))
+		this.observers.observe(this.coords, co => this.marker.setLatLng(co))
 	}
 
 	inserted(node: Node) {
@@ -274,7 +274,7 @@ export class LayerDisplayer extends Mixin<Comment> {
 	}
 
 	init() {
-		this.observe(this.layers, layers => {
+		this.observers.observe(this.layers, layers => {
 			// update the layers in this group
 
 			if (!Array.isArray(layers))
