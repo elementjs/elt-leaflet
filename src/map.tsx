@@ -3,19 +3,14 @@ import {
 	Attrs,
 	Component,
 	Mixin,
-	DisplayIf,
-	getChildren,
 	o,
-	observe,
-	inserted,
-	removed,
 	instanciate_verb,
 } from 'elt'
 
 import * as L from 'leaflet'
 
 import { cls } from 'osun'
-import { Styling } from 'elt-ui'
+import { Styling as S } from 'elt-ui'
 
 import {domMarker} from './marker'
 
@@ -56,7 +51,7 @@ export class Map extends Component {
 		return this.l
 	}
 
-	inserted(node: HTMLElement) {
+	init(node: HTMLElement) {
 		var map = this.l = L.map(node, {
 			zoomControl: false,
 			// minZoom: 7,
@@ -67,9 +62,9 @@ export class Map extends Component {
 		})
 
 				// Rajout des tiles OSM
-    L.tileLayer(this.attrs.tileLayer, {
+		L.tileLayer(this.attrs.tileLayer, {
 			// subdomains: TILE_SUBDOMAINS
-    }).addTo(this.l);
+		}).addTo(this.l);
 
 		const upd = o.debounce(() => {
 			this.from_event = true
@@ -89,6 +84,44 @@ export class Map extends Component {
 
 		map.on('moveend', upd)
 		map.on('zoomend', upd)
+
+		if (this.attrs.center)
+			this.observe(this.attrs.center, center => {
+				if (this.from_event) return
+				if (center && !this.leafletMap.getCenter().equals(center)) {
+					this.leafletMap.panTo(center, {animate: true})
+				}
+			})
+
+		if (this.attrs['center-ro'])
+			this.observe(this.attrs['center-ro']!, center => {
+				if (this.from_event) return
+				if (center && !this.leafletMap.getCenter().equals(center)) {
+					this.leafletMap.panTo(center, {animate: true})
+				}
+			})
+
+
+		if (this.attrs.bbox) {
+			this.observe(this.attrs.bbox, bbox => {
+				if (this.from_event) return
+				if (bbox && !this.leafletMap.getBounds().equals(bbox))
+					this.leafletMap.fitBounds(bbox, {animate: true})
+			})
+		}
+
+		if (this.attrs['bbox-ro']) {
+			this.observe(this.attrs['bbox-ro']!, bbox => {
+				if (this.from_event) return
+				if (bbox && !this.leafletMap.getBounds().equals(bbox))
+					this.leafletMap.fitBounds(bbox, {animate: true})
+			})
+		}
+
+		if (this.attrs.zoom)
+			this.observe(this.attrs.zoom, zoom => {
+				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
+			})
 
 		requestAnimationFrame(() => map.invalidateSize({}))
 	}
@@ -111,45 +144,6 @@ export class Map extends Component {
 	}
 
 	render(children: DocumentFragment) {
-
-		if (this.attrs.center)
-			this.observers.observe(this.attrs.center, center => {
-				if (this.from_event) return
-				if (center && !this.leafletMap.getCenter().equals(center)) {
-					this.leafletMap.panTo(center, {animate: true})
-				}
-			})
-
-		if (this.attrs['center-ro'])
-			this.observers.observe(this.attrs['center-ro']!, center => {
-				if (this.from_event) return
-				if (center && !this.leafletMap.getCenter().equals(center)) {
-					this.leafletMap.panTo(center, {animate: true})
-				}
-			})
-
-
-		if (this.attrs.bbox) {
-			this.observers.observe(this.attrs.bbox, bbox => {
-				if (this.from_event) return
-				if (bbox && !this.leafletMap.getBounds().equals(bbox))
-					this.leafletMap.fitBounds(bbox, {animate: true})
-			})
-		}
-
-		if (this.attrs['bbox-ro']) {
-			this.observers.observe(this.attrs['bbox-ro']!, bbox => {
-				if (this.from_event) return
-				if (bbox && !this.leafletMap.getBounds().equals(bbox))
-					this.leafletMap.fitBounds(bbox, {animate: true})
-			})
-		}
-
-		if (this.attrs.zoom)
-			this.observers.observe(this.attrs.zoom, zoom => {
-				if (zoom != null) this.leafletMap.setZoom(zoom, {animate: true})
-			})
-
 		return <div class={Map.cls_container}>{children}</div>
 	}
 
@@ -158,7 +152,7 @@ export class Map extends Component {
 
 export namespace Map {
 	export const cls_container = cls('map', {
-		background: Styling.colors.BG,
+		background: S.BG,
 		zIndex: 0
 	})
 }
@@ -246,7 +240,7 @@ export class MarkerDisplayer extends Mixin<Comment> {
 
 	init() {
 		this.marker = domMarker(o.get(this.coords), this.dom_marker, this.options)
-		this.observers.observe(this.coords, co => this.marker.setLatLng(co))
+		this.observe(this.coords, co => this.marker.setLatLng(co))
 	}
 
 	inserted(node: Node) {
@@ -274,7 +268,7 @@ export class LayerDisplayer extends Mixin<Comment> {
 	}
 
 	init() {
-		this.observers.observe(this.layers, layers => {
+		this.observe(this.layers, layers => {
 			// update the layers in this group
 
 			if (!Array.isArray(layers))

@@ -21,11 +21,11 @@ export function domMarker(ll: L.LatLngExpression, icon: Element, options: L.Mark
 	var marker = L.marker(ll, options)
 
 	marker.on('remove', function (this: L.Marker, ev) {
-		unmount(node, node.parentNode!, node.previousSibling, node.nextSibling)
+		unmount(node)
 	})
 
 	marker.on('add', function () {
-		mount(node, node.parentNode!)
+		mount(node)
 	})
 
   return marker
