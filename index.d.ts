@@ -82,8 +82,7 @@ declare module 'elt-leaflet/map' {
         options: L.MarkerOptions;
         marker: L.Marker;
         constructor(coords: o.RO<L.LatLngExpression>, dom_marker: Element, options: L.MarkerOptions);
-        init(): void;
-        inserted(node: Node): void;
+        init(node: Node): void;
         removed(node: Node): void;
     }
     export function DisplayMarker(coords: o.RO<L.LatLngExpression>, marker: Element, options?: L.MarkerOptions): Node;
@@ -92,8 +91,7 @@ declare module 'elt-leaflet/map' {
         map: L.Map;
         layer: L.LayerGroup;
         constructor(layers: o.RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>);
-        init(): void;
-        inserted(node: Node): void;
+        init(node: Node): void;
         removed(node: Node): void;
     }
     export function DisplayLayers(layers: o.RO<null | undefined | L.Layer | (null | undefined | L.Layer)[]>): Node;

@@ -238,12 +238,9 @@ export class MarkerDisplayer extends Mixin<Comment> {
 		super()
 	}
 
-	init() {
+	init(node: Node) {
 		this.marker = domMarker(o.get(this.coords), this.dom_marker, this.options)
 		this.observe(this.coords, co => this.marker.setLatLng(co))
-	}
-
-	inserted(node: Node) {
 		Map.get(node)!.addLayer(this.marker)
 	}
 
@@ -267,7 +264,7 @@ export class LayerDisplayer extends Mixin<Comment> {
 		this.layer = L.layerGroup([])
 	}
 
-	init() {
+	init(node: Node) {
 		this.observe(this.layers, layers => {
 			// update the layers in this group
 
@@ -280,12 +277,12 @@ export class LayerDisplayer extends Mixin<Comment> {
 			for (var l2 of layers)
 				if (l2) this.layer.addLayer(l2)
 		})
-	}
 
-	inserted(node: Node) {
-		var map = Map.get(node)
-		if (map)
-			map.leafletMap.addLayer(this.layer)
+		requestAnimationFrame(() => {
+			var map = Map.get(node)
+			if (map)
+				map.leafletMap.addLayer(this.layer)
+		})
 	}
 
 	removed(node: Node) {
