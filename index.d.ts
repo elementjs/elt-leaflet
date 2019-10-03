@@ -31,7 +31,7 @@ declare module 'elt-leaflet/map' {
         render(children: DocumentFragment): Element;
     }
     export namespace Map {
-        const cls_container: string;
+        const cls_container: import("osun").CssClass & string;
     }
     export type LeafletCallback<T extends L.LeafletEvent> = (ev: T) => any;
     export interface MapWatcherCallbacks {

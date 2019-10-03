@@ -9,7 +9,7 @@ import {
 
 import * as L from 'leaflet'
 
-import { cls } from 'osun'
+import { style as cls } from 'osun'
 import { Styling as S } from 'elt-ui'
 
 import {domMarker} from './marker'
