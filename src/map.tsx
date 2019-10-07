@@ -241,7 +241,9 @@ export class MarkerDisplayer extends Mixin<Comment> {
 	init(node: Node) {
 		this.marker = domMarker(o.get(this.coords), this.dom_marker, this.options)
 		this.observe(this.coords, co => this.marker.setLatLng(co))
-		Map.get(node)!.addLayer(this.marker)
+		window.setTimeout(() => {
+			Map.get(node)!.addLayer(this.marker)
+		})
 	}
 
 	removed(node: Node) {
