@@ -166,6 +166,8 @@ export class Grouper<T> extends Mixin<Comment> {
    * Recompute the clusters or single points.
    */
   recompute() {
+    if (!this.map) return
+
     var clusters: Cluster<T>[] = []
     this.computeLists()
 
@@ -190,17 +192,6 @@ export class Grouper<T> extends Mixin<Comment> {
     this.o_clusters.set(clusters)
   }
 
-  inserted(node: Node) {
-    this.map = Map.get(node)!.leafletMap
-
-    this.map.addLayer(this.cluster_layer)
-
-    // Whenever the zoom level changes, we want to recompute
-    // the point clouds.
-    this.map.on('moveend', this.bound_recompute)
-    this.map.on('zoomend', this.bound_recompute)
-  }
-
   removed() {
     for (var co of this.child_observables)
       co.stopObservers()
@@ -214,6 +205,19 @@ export class Grouper<T> extends Mixin<Comment> {
    *
    */
   init() {
+
+    setTimeout(() => {
+      this.map = Map.get(this.node)!.leafletMap
+      // console.log(this.map)
+
+      this.map.addLayer(this.cluster_layer)
+
+      // Whenever the zoom level changes, we want to recompute
+      // the point clouds.
+      this.map.on('moveend', this.bound_recompute)
+      this.map.on('zoomend', this.bound_recompute)
+    })
+
     // We have to track the observables we send back to the marker functions,
     // as they may be out of sync with the new list when it changes. When that
     // happens, we just disable them.

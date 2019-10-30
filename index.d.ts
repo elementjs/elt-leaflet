@@ -145,7 +145,6 @@ declare module 'elt-leaflet/grouper' {
                 * Recompute the clusters or single points.
                 */
             recompute(): void;
-            inserted(node: Node): void;
             removed(): void;
             /**
                 *
