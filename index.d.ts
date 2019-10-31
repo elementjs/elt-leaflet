@@ -23,7 +23,7 @@ declare module 'elt-leaflet/map' {
     }
     export class Map extends Component {
         attrs: MapAttributes;
-        readonly leafletMap: L.Map;
+        get leafletMap(): L.Map;
         init(node: HTMLElement): void;
         removed(): void;
         panTo(ll: L.LatLng): void;
