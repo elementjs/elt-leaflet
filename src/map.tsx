@@ -152,7 +152,7 @@ export class Map extends Component {
 
 export namespace Map {
 	export const cls_container = cls('map', {
-		background: S.BG,
+		background: S.colors.BG,
 		zIndex: 0
 	})
 }

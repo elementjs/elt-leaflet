@@ -13,10 +13,8 @@
         "jsx": "react",
         "reactNamespace": "E",
         "outDir": "./build",
+        "srcDir": "./src",
         "lib": ["es6", "dom"]
-    },
-    "files": [
-        "./src/index.ts"
-    ]
+    }
 
 }
