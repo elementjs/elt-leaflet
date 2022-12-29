@@ -21,7 +21,7 @@
     "chokidar-cli": "^1.2.0",
     "concurrently": "^3.5.1",
     "dts-bundle": "^0.7.3",
-    "source-map-loader": "^0.1.5",
-    "webpack": "^1.13.3"
+    "source-map-loader": "^4.0.1",
+    "webpack": "^5.75.0"
   }
 }
